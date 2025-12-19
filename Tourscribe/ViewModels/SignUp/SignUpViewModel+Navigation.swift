@@ -7,11 +7,15 @@ extension SignUpViewModel {
     
     func nextStep() {
         switch currentStep {
-        case 1:
+        case 1: // Step 1 is Credentials
             if validateCredentials() {
                 Task { await createAccount() }
             }
-        case 3:
+        case 2: // Step 2 is Identity
+            if validateIdentity() {
+                navigateToNextStep()
+            }
+        case 3: // Step 3 is Interests
             if validateInterests() {
                 Task { await completeRegistration() }
             }

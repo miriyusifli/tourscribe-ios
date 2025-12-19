@@ -12,6 +12,6 @@ enum ValidationHelper {
     }
     
     static func isValidPassword(_ password: String) -> Bool {
-        password.count >= 6
+        password.count >= AppConfig.passwordMinLength
     }
 }

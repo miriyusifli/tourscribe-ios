@@ -9,7 +9,6 @@ class SignUpViewModel {
     
     // MARK: - Internal Configuration
     // Visible to extensions
-    let minimumInterests = 3
     let authService: AuthServiceProtocol
     let emailSubject = PassthroughSubject<String, Never>()
     let passwordSubject = PassthroughSubject<String, Never>()
