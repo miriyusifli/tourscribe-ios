@@ -24,7 +24,7 @@ struct StepTwoCredentials: View {
                 CustomTextField(icon: "envelope.fill", placeholder: "Email address", text: $email)
                 
                 if !email.isEmpty && !isEmailValid {
-                    Text("Please enter a valid email address")
+                    Text(String(localized: "validation.email.invalid.generic"))
                         .font(.caption)
                         .foregroundColor(.red)
                         .padding(.leading, 4)
@@ -52,7 +52,7 @@ struct StepTwoCredentials: View {
                 }
             }
             
-            Text("Verification link will be sent to your email.")
+            Text(String(localized: "label.verification.sent"))
                 .font(.caption)
                 .foregroundColor(.textSecondary)
                 .padding(.leading, 4)

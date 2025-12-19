@@ -17,7 +17,7 @@ struct StepThreeIdentity: View {
             
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    DatePicker("Date of Birth", selection: $birthDate, in: ...Date(), displayedComponents: .date)
+                    DatePicker(String(localized: "label.date_of_birth"), selection: $birthDate, in: ...Date(), displayedComponents: .date)
                         .datePickerStyle(.compact)
                         .tint(.primaryColor)
                 }

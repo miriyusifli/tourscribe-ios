@@ -1,88 +1,93 @@
 import SwiftUI
 
+import SwiftUI
+
 struct StepFourInterests: View {
     @Binding var selectedInterests: Set<String>
-    let interests: [(String, String, String)]
+    let interests: [Interest]
+    
+    // Grid configuration
+    private let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("Tap to collect badges that match your travel style!")
+            headerView
+            
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(interests, id: \.id) { interest in
+                        InterestBadge(
+                            emoji: interest.emoji,
+                            name: interest.name,
+                            subtitle: interest.description,
+                            isSelected: selectedInterests.contains(interest.id),
+                            action: { toggleInterest(interest.id) }
+                        )
+                    }
+                }
+                .padding(.bottom, 20) // Add padding for scrolling
+            }
+        }
+    }
+    
+    // MARK: - Subviews
+    
+    private var headerView: some View {
+        VStack(spacing: 20) {
+            Text(String(localized: "signup.interests.subtitle"))
                 .font(.subheadline)
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
             
-            Text("\(selectedInterests.count)/10 collected")
-                .font(.caption)
-                .foregroundColor(.primaryColor)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.primaryColor.opacity(0.1))
-                .cornerRadius(20)
-            
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(interests, id: \.1) { emoji, name, subtitle in
-                        InterestBadge(
-                            emoji: emoji,
-                            name: name,
-                            subtitle: subtitle,
-                            isSelected: selectedInterests.contains(name)
-                        ) {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                if selectedInterests.contains(name) {
-                                    selectedInterests.remove(name)
-                                } else {
-                                    selectedInterests.insert(name)
-                                }
-                            }
-                        }
-                    }
-                }
+            HStack(spacing: 12) {
+                countBadge
+                hintText
             }
         }
     }
-}
-
-struct InterestBadge: View {
-    let emoji: String
-    let name: String
-    let subtitle: String
-    let isSelected: Bool
-    let action: () -> Void
     
-    @State private var isPressed = false
+    private var countBadge: some View {
+        Text("\(selectedInterests.count)/10")
+            .font(.caption)
+            .foregroundColor(.primaryColor)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.primaryColor.opacity(0.1))
+            .cornerRadius(20)
+    }
     
-    var body: some View {
-        Button(action: {
-            isPressed = true
-            action()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
+    private var hintText: some View {
+        let (text, color) = selectionHint
+        return Text(text)
+            .font(.caption)
+            .foregroundColor(color)
+    }
+    
+    // MARK: - Logic
+    
+    private func toggleInterest(_ id: String) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            if selectedInterests.contains(id) {
+                selectedInterests.remove(id)
+            } else {
+                selectedInterests.insert(id)
             }
-        }) {
-            VStack(spacing: 8) {
-                Text(emoji)
-                    .font(.system(size: 40))
-                    .scaleEffect(isSelected ? 1.2 : 1.0)
-                    .rotationEffect(.degrees(isPressed ? 10 : 0))
-                
-                Text(name)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(isSelected ? .white : .textPrimary)
-                
-                Text(subtitle)
-                    .font(.system(size: 10))
-                    .foregroundColor(isSelected ? .white.opacity(0.8) : .textSecondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 20)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelected ? Color.primaryColor : Color.white)
-                    .shadow(color: isSelected ? Color.primaryColor.opacity(0.4) : Color.black.opacity(0.05), radius: isSelected ? 12 : 4, x: 0, y: isSelected ? 6 : 2)
-            )
-            .scaleEffect(isPressed ? 0.95 : 1.0)
         }
-        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var selectionHint: (String, Color) {
+        let count = selectedInterests.count
+        if count == 0 {
+            return (String(localized: "signup.interests.hint.empty"), .textSecondary)
+        } else if count < 3 {
+            let remaining = 3 - count
+            let format = String(localized: "signup.interests.hint.remaining")
+            return (String(format: format, remaining), .orange)
+        } else {
+            return (String(localized: "signup.interests.hint.complete"), .green)
+        }
     }
 }

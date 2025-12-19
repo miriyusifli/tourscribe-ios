@@ -4,7 +4,7 @@ import SwiftUI
 struct TourscribeApp: App {
     var body: some Scene {
         WindowGroup {
-            TripItineraryView()
+            SignUpView()
         }
     }
 }

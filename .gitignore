@@ -81,5 +81,16 @@ Temporary Items
 timeline.xctimeline
 playground.xcworkspace
 
-# Amazon Q
+# LLM configs
 .amazonq/
+.gemini
+
+# Supabase Config
+**/SupabaseConfig.swift
+
+#docs
+docs
+
+# env
+.env
+
