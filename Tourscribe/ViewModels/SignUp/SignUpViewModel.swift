@@ -43,7 +43,7 @@ class SignUpViewModel {
     // MARK: - View Bindings
     var email: String {
         get { authState.email }
-        set { authState.email = newValue }
+        set { authState.email = newValue.lowercased() }
     }
     
     var password: String {

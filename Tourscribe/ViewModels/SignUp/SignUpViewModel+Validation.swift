@@ -7,11 +7,8 @@ extension SignUpViewModel {
     
     func setupValidation() {
         emailSubject
-            .removeDuplicates()
-            .debounce(for: .seconds(0.3), scheduler: DispatchQueue.main)
-            .map { ValidationHelper.isValidEmail($0) }
-            .sink { [weak self] isValid in
-                self?.isEmailValid = isValid
+            .sink { [weak self] _ in
+                self?.isEmailValid = true
             }
             .store(in: &cancellables)
         
@@ -28,7 +25,11 @@ extension SignUpViewModel {
     // MARK: - Validation Checks
     
     func validateCredentials() -> Bool {
-        guard isEmailValid else {
+        // Validate email explicitly on button click
+        let isEmailValidNow = ValidationHelper.isValidEmail(email)
+        self.isEmailValid = isEmailValidNow
+        
+        guard isEmailValidNow else {
             alert = .validation(SignUpValidationError.invalidEmail.localizedDescription)
             return false
         }

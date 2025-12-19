@@ -22,6 +22,9 @@ struct StepTwoCredentials: View {
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
                 CustomTextField(icon: "envelope.fill", placeholder: "Email address", text: $email)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.emailAddress)
+                    .autocorrectionDisabled(true)
                 
                 if !email.isEmpty && !isEmailValid {
                     Text(String(localized: "validation.email.invalid.generic"))
