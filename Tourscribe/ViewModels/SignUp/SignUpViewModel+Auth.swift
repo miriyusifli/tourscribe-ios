@@ -66,7 +66,7 @@ extension SignUpViewModel {
             lastName: formData.lastName,
             birthDate: formData.birthDate.formatted(.iso8601.year().month().day()),
             gender: formData.gender,
-            interests: formData.selectedInterests.joined(separator: ",")
+            interests: Array(formData.selectedInterests)
         )
     }
     

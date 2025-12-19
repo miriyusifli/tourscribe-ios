@@ -56,7 +56,7 @@ struct SignUpView: View {
                 )
             }
             .fullScreenCover(isPresented: $viewModel.signUpSuccess) {
-                TripItineraryView()
+                MyTrips()
             }
         }
     }
