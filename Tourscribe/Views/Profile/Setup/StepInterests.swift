@@ -1,8 +1,6 @@
 import SwiftUI
 
-import SwiftUI
-
-struct StepFourInterests: View {
+struct StepInterests: View {
     @Binding var selectedInterests: Set<String>
     let interests: [Interest]
     
@@ -13,10 +11,10 @@ struct StepFourInterests: View {
     ]
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 24) {
             headerView
             
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(interests, id: \.id) { interest in
                         InterestBadge(
@@ -28,7 +26,6 @@ struct StepFourInterests: View {
                         )
                     }
                 }
-                .padding(.bottom, 20) // Add padding for scrolling
             }
         }
     }
@@ -36,16 +33,11 @@ struct StepFourInterests: View {
     // MARK: - Subviews
     
     private var headerView: some View {
-        VStack(spacing: 20) {
-            Text(String(localized: "signup.interests.subtitle"))
-                .font(.subheadline)
-                .foregroundColor(.textSecondary)
-                .multilineTextAlignment(.center)
+        HStack() {
+            hintText
+                .frame(maxWidth: .infinity, alignment: .leading)
             
-            HStack(spacing: 12) {
-                countBadge
-                hintText
-            }
+            countBadge
         }
     }
     
@@ -81,13 +73,13 @@ struct StepFourInterests: View {
     private var selectionHint: (String, Color) {
         let count = selectedInterests.count
         if count == 0 {
-            return (String(localized: "signup.interests.hint.empty"), .textSecondary)
+            return (String(localized: "profile.setup.interests.hint.empty"), .textSecondary)
         } else if count < 3 {
             let remaining = 3 - count
-            let format = String(localized: "signup.interests.hint.remaining")
+            let format = String(localized: "profile.setup.interests.hint.remaining")
             return (String(format: format, remaining), .orange)
         } else {
-            return (String(localized: "signup.interests.hint.complete"), .green)
+            return (String(localized: "profile.setup.interests.hint.complete"), .green)
         }
     }
 }

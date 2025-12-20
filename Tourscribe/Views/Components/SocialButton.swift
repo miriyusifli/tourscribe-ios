@@ -21,7 +21,7 @@ struct SocialButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(Capsule())
         }
     }
 }

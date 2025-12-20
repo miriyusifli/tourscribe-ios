@@ -1,18 +1,18 @@
 import SwiftUI
 
-struct StepThreeIdentity: View {
+struct StepPersonalInfo: View {
     @Binding var firstName: String
     @Binding var lastName: String
     @Binding var birthDate: Date
     @Binding var gender: String
     
-    let genders = ["Male", "Female", "Other"]
+    let genders = Gender.allCases
     
     var body: some View {
         VStack(spacing: 20) {
             HStack {
-                CustomTextField(placeholder: "First Name", text: $firstName)
-                CustomTextField(placeholder: "Last Name", text: $lastName)
+                CustomTextField(placeholder: String(localized: "placeholder.first_name"), text: $firstName)
+                CustomTextField(placeholder: String(localized: "placeholder.last_name"), text: $lastName)
             }
             
             VStack(alignment: .leading, spacing: 10) {
@@ -30,14 +30,14 @@ struct StepThreeIdentity: View {
             VStack(alignment: .leading, spacing: 10) {
             
                 HStack(spacing: 12) {
-                    ForEach(genders, id: \.self) { option in
-                        Button(action: { gender = option }) {
-                            Text(option)
+                    ForEach(genders) { option in
+                        Button(action: { gender = option.rawValue }) {
+                            Text(option.localizedName)
                                 .font(.system(size: 16))
-                                .foregroundColor(gender == option ? .white : .textPrimary)
+                                .foregroundColor(gender == option.rawValue ? .white : .textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(gender == option ? Color.primaryColor : Color.white)
+                                .background(gender == option.rawValue ? Color.primaryColor : Color.white)
                                 .cornerRadius(12)
                         }
                     }

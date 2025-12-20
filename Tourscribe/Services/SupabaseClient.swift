@@ -9,9 +9,11 @@ class SupabaseClientManager {
     private init() {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
+        encoder.dateEncodingStrategy = .iso8601
         
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .iso8601
         
         client = SupabaseClient(
             supabaseURL: URL(string: SupabaseConfig.url)!,

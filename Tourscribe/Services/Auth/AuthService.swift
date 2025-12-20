@@ -22,6 +22,21 @@ class AuthService: AuthServiceProtocol {
     func getCurrentUser() async throws -> User? {
         return try await client.auth.session.user
     }
+    
+    func getProfile(userId: String) async throws -> UserProfile? {
+        do {
+            let profile: UserProfile = try await client
+                .from("profiles")
+                .select()
+                .eq("id", value: userId)
+                .single()
+                .execute()
+                .value
+            return profile
+        } catch {
+            return nil
+        }
+    }
 
     
     func updateProfile(userId: String, data: ProfileUpdateRequest) async throws {

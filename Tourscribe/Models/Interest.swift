@@ -3,14 +3,23 @@ import Foundation
 struct Interest: Identifiable {
     let id: String
     let emoji: String
+    private let _name: String?
+    private let _description: String?
     
-    // Computed properties fetch localized strings dynamically
+    init(id: String, emoji: String, name: String? = nil, description: String? = nil) {
+        self.id = id
+        self.emoji = emoji
+        self._name = name
+        self._description = description
+    }
+    
+    // Computed properties fetch localized strings dynamically if explicit values aren't provided
     var name: String {
-        NSLocalizedString("interest.\(id).name", comment: "")
+        _name ?? NSLocalizedString("interest.\(id).name", comment: "")
     }
     
     var description: String {
-        NSLocalizedString("interest.\(id).description", comment: "")
+        _description ?? NSLocalizedString("interest.\(id).description", comment: "")
     }
     
     static let all: [Interest] = [

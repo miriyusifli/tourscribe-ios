@@ -5,7 +5,8 @@ struct ProfileUpdateRequest: Codable {
     let email: String
     let firstName: String
     let lastName: String
-    let birthDate: String
+    let birthDate: Date
     let gender: String
     let interests: [String]
+
 }
