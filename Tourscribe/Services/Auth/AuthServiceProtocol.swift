@@ -9,4 +9,7 @@ protocol AuthServiceProtocol {
     func getProfile(userId: String) async throws -> UserProfile?
     func updateProfile(userId: String, data: ProfileUpdateRequest) async throws
     func signInWithSocial(provider: SocialAuthProvider) async throws -> User
+    
+    var session: Session? { get async }
+    var authStateChanges: AsyncStream<(event: AuthChangeEvent, session: Session?)> { get }
 }

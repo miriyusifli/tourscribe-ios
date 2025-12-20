@@ -45,6 +45,16 @@ class AuthService: AuthServiceProtocol {
             .execute()
     }
     
+    var session: Session? {
+        get async {
+            return try? await client.auth.session
+        }
+    }
+
+    var authStateChanges: AsyncStream<(event: AuthChangeEvent, session: Session?)> {
+        client.auth.authStateChanges
+    }
+    
     func signInWithSocial(provider: SocialAuthProvider) async throws -> User {
         // TODO: Implement actual social auth with Supabase
         // For Apple: client.auth.signInWithIdToken(credentials: .init(provider: .apple, idToken: token))

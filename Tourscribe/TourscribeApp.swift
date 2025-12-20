@@ -2,20 +2,25 @@ import SwiftUI
 
 @main
 struct TourscribeApp: App {
-    @State private var isLoggedIn = false
+    @State private var appViewModel = AppViewModel()
     
     var body: some Scene {
         WindowGroup {
-            if isLoggedIn {
-                MyTrips()
-                    .transition(.opacity)
+            if appViewModel.isLoading {
+                LoadingView()
             } else {
-                NavigationStack {
-                    SignInView {
-                        withAnimation {
-                            isLoggedIn = true
+                if appViewModel.isLoggedIn {
+                    MyTrips()
+                        .transition(.opacity)
+                } else {
+                    NavigationStack {
+                        SignInView {
+                            withAnimation {
+                                appViewModel.isLoggedIn = true
+                            }
                         }
                     }
+                    .transition(.opacity)
                 }
             }
         }
