@@ -65,7 +65,7 @@ class ProfileSetupViewModel {
                 try await authService.updateProfile(userId: userId, data: request)
                 setupSuccess = true
             } catch {
-                alert = .error(error.localizedDescription)
+                alert = .error(String(localized: "error.generic.unknown"))
             }
         }
     }

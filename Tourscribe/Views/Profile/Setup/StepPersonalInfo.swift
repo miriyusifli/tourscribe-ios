@@ -16,15 +16,11 @@ struct StepPersonalInfo: View {
             }
             
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    DatePicker(String(localized: "label.date_of_birth"), selection: $birthDate, in: ...Date(), displayedComponents: .date)
-                        .datePickerStyle(.compact)
-                        .tint(.primaryColor)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .background(.white)
-                .cornerRadius(12)
+                CustomDatePicker(
+                    title: String(localized: "label.date_of_birth"),
+                    selection: $birthDate,
+                    displayedComponents: .date
+                )
             }
             
             VStack(alignment: .leading, spacing: 10) {

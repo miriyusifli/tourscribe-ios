@@ -33,7 +33,7 @@ class SignInViewModel {
                 let user = try await authService.signIn(email: email, password: password)
                 await checkProfileAndProceed(userId: user.id)
             } catch {
-                alert = .error(error.localizedDescription)
+                alert = .error(String(localized: "error.generic.unknown"))
             }
         }
     }
@@ -56,7 +56,7 @@ class SignInViewModel {
             let user = try await authService.signInWithSocial(provider: provider)
             await checkProfileAndProceed(userId: user.id)
         } catch {
-            alert = .error(error.localizedDescription)
+            alert = .error(String(localized: "error.generic.unknown"))
         }
     }
     
@@ -69,12 +69,7 @@ class SignInViewModel {
                 requiresProfileSetup = true
             }
         } catch {
-            // If checking profile fails, what should we do? 
-            // Maybe assume no profile or show error?
-            // For now, let's treat it as "setup needed" or just show error.
-            // If network fails here but auth succeeded, user is logged in but stuck.
-            // Safest might be to try setup.
-            requiresProfileSetup = true
+            alert = .error(String(localized: "error.generic.unknown"))
         }
     }
 }

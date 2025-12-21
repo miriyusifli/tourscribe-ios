@@ -151,7 +151,7 @@ class SignUpViewModel {
         } catch is CancellationError {
             // Ignore cancellation
         } catch {
-            self.alert = .error(error.localizedDescription)
+            self.alert = .error(String(localized: "error.generic.unknown"))
         }
     }
 }
