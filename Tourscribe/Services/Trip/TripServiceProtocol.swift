@@ -9,5 +9,6 @@ import Foundation
 
 protocol TripServiceProtocol {
     func createTrip(name: String, startDate: Date?, endDate: Date?) async throws -> Trip
-    func fetchTrips() async throws -> [Trip]
+    func fetchUpcomingTrips() async throws -> [Trip]
+    func fetchPastTrips() async throws -> [Trip]
 }

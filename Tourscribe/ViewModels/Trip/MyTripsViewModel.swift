@@ -5,7 +5,7 @@ import Combine
 class MyTripsViewModel: ObservableObject {
     @Published var trips: [Trip] = []
     @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
+    @Published var alert: AlertType?
     
     private let tripService: TripServiceProtocol
     
@@ -13,14 +13,23 @@ class MyTripsViewModel: ObservableObject {
         self.tripService = tripService
     }
     
-    func fetchTrips() async {
-        isLoading = true
-        errorMessage = nil
+    func fetchTrips(for segment: TripListSegment) async {
+        if trips.isEmpty {
+            isLoading = true
+        }
+        alert = nil
         
         do {
-            trips = try await tripService.fetchTrips()
+            if segment == .upcoming {
+                trips = try await tripService.fetchUpcomingTrips()
+            } else {
+                trips = try await tripService.fetchPastTrips()
+            }
         } catch {
-            errorMessage = String(localized: "error.generic.unknown")
+            let nsError = error as NSError
+            if nsError.code != NSURLErrorCancelled && !Task.isCancelled {
+                alert = .error(String(localized: "error.generic.unknown"))
+            }
         }
         
         isLoading = false

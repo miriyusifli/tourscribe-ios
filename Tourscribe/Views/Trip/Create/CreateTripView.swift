@@ -93,8 +93,7 @@ struct CreateTripView: View {
             }
         }
         .onChange(of: viewModel.createdTrip) { _, trip in
-            if let trip = trip {
-                navigationPath.append(trip)
+            if trip != nil {
                 dismiss()
             }
         }

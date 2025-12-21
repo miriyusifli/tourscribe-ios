@@ -1,73 +1,96 @@
 import SwiftUI
 
+enum TripListSegment: Int, CaseIterable, Identifiable {
+    case upcoming = 0
+    case past = 1
+    
+    var id: Int { rawValue }
+    
+    var title: String {
+        switch self {
+        case .upcoming:
+            return String(localized: "segment.trips", defaultValue: "Trips")
+        case .past:
+            return String(localized: "segment.past_trips", defaultValue: "Past Trips")
+        }
+    }
+}
+
 struct MyTrips: View {
     // MARK: - State
-    @State private var selectedSegment = 0
+    @StateObject private var viewModel = MyTripsViewModel()
+    @State private var navigationPath = NavigationPath()
+    @State private var isShowingCreateTrip = false
+    @State private var selectedSegment: TripListSegment = .upcoming
     @State private var selectedTab = 0
-    
-    // Mock Data for Design Preview
-    private let upcomingTrips = [
-        TripMock(title: "Kyoto Spring Adventure", dates: "Apr 10 - Apr 24, 2026", status: .current),
-        TripMock(title: "Italian Summer", dates: "Jul 15 - Jul 30, 2026", status: .upcoming)
-    ]
-    
-    private let pastTrips = [
-        TripMock(title: "New York Christmas", dates: "Dec 20 - Dec 27, 2024", status: .past)
-    ]
-    
+
     var body: some View {
         MainTabView(
             selection: $selectedTab,
             mainTabTitle: String(localized: "tab.my_trips"),
             mainTabIcon: "suitcase.fill"
         ) {
-            myTripsContent
+            MyTripsContentView(
+                viewModel: viewModel,
+                navigationPath: $navigationPath,
+                isShowingCreateTrip: $isShowingCreateTrip,
+                selectedSegment: $selectedSegment
+            )
         }
     }
-    
-    private var myTripsContent: some View {
-        NavigationStack {
-            ZStack {
-                // Background Gradient
-                LinearGradient(
-                    colors: [.backgroundTop, .backgroundBottom],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-                
+}
+
+private struct MyTripsContentView: View {
+    @ObservedObject var viewModel: MyTripsViewModel
+    @Binding var navigationPath: NavigationPath
+    @Binding var isShowingCreateTrip: Bool
+    @Binding var selectedSegment: TripListSegment
+
+    var body: some View {
+        NavigationStack(path: $navigationPath) {
+            AppView {
                 VStack(spacing: 24) {
-                    // Header
-                    headerView
-                    
-                    // Segmented Control
-                    pickerView
-                    
-                    // Content
-                    ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: 20) {
-                            let trips = selectedSegment == 0 ? upcomingTrips : pastTrips
-                            ForEach(trips) { trip in
-                                TripCardView(trip: trip)
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 100) // Space for floating button if needed
-                    }
-                    .safeAreaInset(edge: .bottom) {
-                        addButton
-                    }
+                    HeaderView()
+                    PickerView(selectedSegment: $selectedSegment)
+                    TripListView(
+                        viewModel: viewModel,
+                        selectedSegment: $selectedSegment,
+                        isShowingCreateTrip: $isShowingCreateTrip
+                    )
                 }
                 .padding(.top, 10)
             }
         }
+        .task(id: selectedSegment) { await loadData() }
+        .onChange(of: isShowingCreateTrip) { oldValue, newValue in
+            if !newValue { Task { await loadData() } }
+        }
+        .sheet(isPresented: $isShowingCreateTrip) {
+            NavigationStack {
+                CreateTripView(navigationPath: $navigationPath)
+            }
+        }
+        .navigationDestination(for: Trip.self) { trip in
+            Text(String(localized: "Trip Details: \(trip.name)"))
+        }
+        .alert(item: $viewModel.alert) { alert in
+            Alert(
+                title: Text(alert.title),
+                message: Text(alert.message),
+                dismissButton: .default(Text(String(localized: "button.ok")))
+            )
+        }
     }
-    
-    // MARK: - Subviews
-    
-    private var headerView: some View {
+
+    private func loadData() async {
+        await viewModel.fetchTrips(for: selectedSegment)
+    }
+}
+
+private struct HeaderView: View {
+    var body: some View {
         HStack {
-            Text("My Trips")
+            Text(String(localized: "title.my_trips", defaultValue: "My Trips"))
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundColor(.textPrimary)
             
@@ -75,21 +98,107 @@ struct MyTrips: View {
         }
         .padding(.horizontal, 24)
     }
-    
-    private var pickerView: some View {
+}
+
+private struct PickerView: View {
+    @Binding var selectedSegment: TripListSegment
+
+    private var selection: Binding<Int> {
+        Binding(
+            get: { selectedSegment.rawValue },
+            set: { selectedSegment = TripListSegment(rawValue: $0) ?? .upcoming }
+        )
+    }
+
+    var body: some View {
         CustomSegmentedPicker(
-            selection: $selectedSegment,
-            items: ["Trips", "Past Trips"]
+            selection: selection,
+            items: TripListSegment.allCases.map { $0.title }
         )
         .frame(height: 42)
         .padding(.horizontal, 24)
     }
+}
+
+private struct TripListView: View {
+    @ObservedObject var viewModel: MyTripsViewModel
+    @Binding var selectedSegment: TripListSegment
+    @Binding var isShowingCreateTrip: Bool
+
+    var body: some View {
+        List {
+            if viewModel.isLoading && viewModel.trips.isEmpty {
+                RefreshLoadingView()
+            } else if viewModel.trips.isEmpty {
+                EmptyStateView(selectedSegment: selectedSegment)
+            } else {
+                TripsListView(trips: viewModel.trips)
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color.clear)
+        .refreshable {
+            await viewModel.fetchTrips(for: selectedSegment)
+        }
+        .safeAreaInset(edge: .bottom) {
+            AddButton(isShowingCreateTrip: $isShowingCreateTrip)
+        }
+    }
+}
+
+private struct RefreshLoadingView: View {
+    var body: some View {
+        ProgressView()
+            .frame(maxWidth: .infinity, alignment: .center)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .padding(.top, 40)
+    }
+}
+
+private struct EmptyStateView: View {
+    let selectedSegment: TripListSegment
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "suitcase")
+                .font(.system(size: 48))
+                .foregroundColor(.textSecondary)
+            Text(selectedSegment == .upcoming ? String(localized: "empty.upcoming") : String(localized: "empty.past"))
+                .font(.headline)
+                .foregroundColor(.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .padding(.top, 60)
+    }
+}
+
+private struct TripsListView: View {
+    let trips: [Trip]
+
+    var body: some View {
+        ForEach(trips) { trip in
+            NavigationLink(value: trip) {
+                TripCardView(trip: trip)
+            }
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 10, leading: 24, bottom: 10, trailing: 24))
+        }
+    }
+}
+
+private struct AddButton: View {
+    @Binding var isShowingCreateTrip: Bool
     
-    private var addButton: some View {
+    var body: some View {
         HStack {
             Spacer()
             Button(action: {
-                // Create new trip action
+                isShowingCreateTrip = true
             }) {
                 Image(systemName: "plus")
                     .font(.system(size: 24, weight: .bold))
@@ -106,301 +215,6 @@ struct MyTrips: View {
     }
 }
 
-// MARK: - Components
-
-struct CustomSegmentedPicker: UIViewRepresentable {
-    @Binding var selection: Int
-    let items: [String]
-    
-    func makeUIView(context: Context) -> UISegmentedControl {
-        let control = TallSegmentedControl(items: items)
-        control.selectedSegmentIndex = selection
-        control.addTarget(context.coordinator, action: #selector(Coordinator.valueChanged(_:)), for: .valueChanged)
-        
-        // Styling
-        control.selectedSegmentTintColor = UIColor(Color.primaryColor)
-        control.backgroundColor = UIColor(Color.black.opacity(0.05))
-        
-        let descriptor = UIFont.systemFont(ofSize: 16, weight: .medium).fontDescriptor.withDesign(.rounded)
-        let font = UIFont(descriptor: descriptor ?? UIFont.systemFont(ofSize: 16).fontDescriptor, size: 16)
-        
-        control.setTitleTextAttributes([
-            .foregroundColor: UIColor.white,
-            .font: font
-        ], for: .selected)
-        
-        control.setTitleTextAttributes([
-            .foregroundColor: UIColor(Color.textSecondary),
-            .font: font
-        ], for: .normal)
-        
-        return control
-    }
-    
-    func updateUIView(_ uiView: UISegmentedControl, context: Context) {
-        uiView.selectedSegmentIndex = selection
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject {
-        var parent: CustomSegmentedPicker
-        
-        init(_ parent: CustomSegmentedPicker) {
-            self.parent = parent
-        }
-        
-        
-        @objc func valueChanged(_ sender: UISegmentedControl) {
-            parent.selection = sender.selectedSegmentIndex
-        }
-    }
-}
-
-class TallSegmentedControl: UISegmentedControl {
-    override var intrinsicContentSize: CGSize {
-        // Enforce a taller height
-        return CGSize(width: super.intrinsicContentSize.width, height: 42)
-    }
-}
-
-struct TripCardView: View {
-    let trip: TripMock
-    
-        var body: some View {
-    
-            VStack(alignment: .leading, spacing: 12) {
-    
-                // Header Row: Title & Status
-    
-                HStack(alignment: .top) {
-    
-                    VStack(alignment: .leading, spacing: 6) {
-    
-                        Text(trip.title)
-    
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-    
-                            .foregroundColor(.textPrimary)
-    
-                            .lineLimit(2)
-    
-                        
-    
-                        HStack(spacing: 6) {
-    
-                            Image(systemName: "calendar")
-    
-                                .font(.caption)
-    
-                            Text(trip.dates)
-    
-                                .font(.subheadline)
-    
-                                .fontWeight(.medium)
-    
-                        }
-    
-                        .foregroundColor(.textSecondary)
-    
-                    }
-    
-                    
-    
-                    Spacer()
-    
-                    
-    
-                    // Status Badge (Top Right)
-    
-                    statusBadge(for: trip.status)
-    
-                }
-    
-            }
-    
-            .padding(20)
-    
-            .background(.ultraThinMaterial)
-    
-            .clipShape(RoundedRectangle(cornerRadius: 24))
-            
-                    .overlay(
-            
-                        RoundedRectangle(cornerRadius: 24)
-            
-                            .stroke(Color.white.opacity(0.5), lineWidth: 1)
-            
-                    )
-            
-                    .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: 8)
-            
-                }
-            
-                
-            
-                    @ViewBuilder
-            
-                
-            
-                    private func statusBadge(for status: TripStatus) -> some View {
-            
-                
-            
-                        switch status {
-            
-                
-            
-                                case .current:
-            
-                
-            
-                                    HStack(spacing: 6) {
-            
-                
-            
-                                        Circle()
-            
-                
-            
-                                            .fill(Color.green)
-            
-                
-            
-                                            .frame(width: 8, height: 8)
-            
-                
-            
-                                        Text("On Trip")
-            
-                
-            
-                                            .font(.caption)
-            
-                
-            
-                                            .fontWeight(.bold)
-            
-                
-            
-                                            .foregroundColor(.green)
-            
-                
-            
-                                    }
-            
-                
-            
-                            .padding(.horizontal, 12)
-            
-                
-            
-                            .padding(.vertical, 6)
-            
-                
-            
-                            .background(Color.green.opacity(0.1))
-            
-                
-            
-                            .clipShape(Capsule())
-            
-                
-            
-                            .overlay(
-            
-                
-            
-                                Capsule()
-            
-                
-            
-                                    .stroke(Color.green.opacity(0.2), lineWidth: 1)
-            
-                
-            
-                            )
-            
-                
-            
-                        case .past:
-            
-                
-            
-                            Text(status.rawValue)
-            
-                
-            
-                                .font(.caption)
-            
-                
-            
-                                .fontWeight(.medium)
-            
-                
-            
-                                .foregroundColor(.textSecondary)
-            
-                
-            
-                                .padding(.horizontal, 10)
-            
-                
-            
-                                .padding(.vertical, 5)
-            
-                
-            
-                                .background(Color.black.opacity(0.05))
-            
-                
-            
-                                .clipShape(Capsule())
-            
-                
-            
-                        case .upcoming:
-            
-                
-            
-                            EmptyView()
-            
-                
-            
-                        }
-            
-                
-            
-                    }
-            
-                
-            
-                }
-
-// MARK: - Mock Models
-
-enum TripStatus: String {
-    case current = "Current"
-    case upcoming = "Upcoming"
-    case past = "Past"
-    
-    var color: Color {
-        switch self {
-        case .current: return .green
-        case .upcoming: return .primaryColor
-        case .past: return .gray
-        }
-    }
-}
-
-struct TripMock: Identifiable {
-    let id = UUID()
-    let title: String
-    let dates: String
-    let status: TripStatus
-}
 
 #Preview {
     MyTrips()
