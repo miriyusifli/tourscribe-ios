@@ -14,11 +14,12 @@ struct CustomTextField: View {
                     .frame(width: StyleGuide.Padding.large)
             }
             TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.gray))
-                .padding(.horizontal, StyleGuide.Padding.medium)
-                .padding(.vertical, StyleGuide.Padding.medium)
-                .background(.white)
-                .cornerRadius(StyleGuide.CornerRadius.standard)
+                .font(.system(size: 16))
         }
+        .padding(.horizontal, StyleGuide.Padding.medium)
+        .padding(.vertical, StyleGuide.Padding.medium)
+        .background(.white)
+        .cornerRadius(StyleGuide.CornerRadius.standard)
     }
 }
 
