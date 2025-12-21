@@ -8,80 +8,13 @@ struct CreateTripView: View {
     
     var body: some View {
         AppView {
-            VStack(spacing: 24) {
-                // Form Fields
-                VStack(alignment: .leading, spacing: 20) {
-                    
-                    CustomTextField(
-                        placeholder: String(localized: "trip.name.placeholder"),
-                        text: $viewModel.tripName
-                    )
-                    
-                    Toggle(isOn: $showDates) {
-                        Text(String(localized: "label.set_dates"))
-                            .font(.body)
-                            .foregroundColor(.textPrimary)
-                    }
-                    .tint(.primaryColor)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .onChange(of: showDates) { _, newValue in
-                        if newValue {
-                            viewModel.startDate = Date()
-                            viewModel.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
-                        } else {
-                            viewModel.startDate = nil
-                            viewModel.endDate = nil
-                        }
-                    }
-                    
-                    if showDates {
-                        VStack(spacing: 12) {
-                            CustomDatePicker(
-                                title: String(localized: "label.start_date"),
-                                selection: Binding(
-                                    get: { viewModel.startDate ?? Date() },
-                                    set: { viewModel.startDate = $0 }
-                                ),
-                                displayedComponents: [.date]
-                            )
-                            
-                            CustomDatePicker(
-                                title: String(localized: "label.end_date"),
-                                selection: Binding(
-                                    get: { viewModel.endDate ?? Date() },
-                                    set: { viewModel.endDate = $0 }
-                                ),
-                                displayedComponents: [.date]
-                            )
-                        }
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-                }
-                .animation(.spring(), value: showDates)
-                
-                if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .font(.caption)
-                        .padding(.horizontal)
-                }
-                
+            VStack(spacing: StyleGuide.Spacing.xlarge) {
+                form
+                errorMessage
                 Spacer()
-                
-                PrimaryActionButton(
-                    title: String(localized: "trip.create.button"),
-                    isLoading: viewModel.isLoading,
-                    action: {
-                        Task {
-                            await viewModel.createTrip()
-                        }
-                    }
-                )
+                createButton
             }
-            .padding(24)
+            .padding(StyleGuide.Padding.xlarge)
         }
         .navigationTitle(String(localized: "trip.create.title"))
         .navigationBarTitleDisplayMode(.inline)
@@ -97,6 +30,93 @@ struct CreateTripView: View {
                 dismiss()
             }
         }
+    }
+
+    @ViewBuilder
+    private var form: some View {
+        VStack(alignment: .leading, spacing: StyleGuide.Spacing.xlarge) {
+            CustomTextField(
+                placeholder: String(localized: "trip.name.placeholder"),
+                text: $viewModel.tripName
+            )
+            
+            dateToggle
+            
+            if showDates {
+                datePickers
+            }
+        }
+        .animation(.spring(), value: showDates)
+    }
+
+    @ViewBuilder
+    private var dateToggle: some View {
+        Toggle(isOn: $showDates) {
+            Text(String(localized: "label.set_dates"))
+                .font(.body)
+                .foregroundColor(.textPrimary)
+        }
+        .tint(.primaryColor)
+        .padding(.horizontal, StyleGuide.Padding.medium)
+        .padding(.vertical, StyleGuide.Padding.medium)
+        .background(Color.white)
+        .cornerRadius(StyleGuide.CornerRadius.standard)
+        .onChange(of: showDates) { _, newValue in
+            if newValue {
+                viewModel.startDate = Date()
+                viewModel.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+            } else {
+                viewModel.startDate = nil
+                viewModel.endDate = nil
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var datePickers: some View {
+        VStack(spacing: StyleGuide.Spacing.standard) {
+            CustomDatePicker(
+                title: String(localized: "label.start_date"),
+                selection: Binding(
+                    get: { viewModel.startDate ?? Date() },
+                    set: { viewModel.startDate = $0 }
+                ),
+                displayedComponents: [.date]
+            )
+            
+            CustomDatePicker(
+                title: String(localized: "label.end_date"),
+                selection: Binding(
+                    get: { viewModel.endDate ?? Date() },
+                    set: { viewModel.endDate = $0 }
+                ),
+                displayedComponents: [.date]
+            )
+        }
+        .transition(.move(edge: .top).combined(with: .opacity))
+    }
+
+    @ViewBuilder
+    private var errorMessage: some View {
+        if let errorMessage = viewModel.errorMessage {
+            Text(errorMessage)
+                .foregroundColor(.red)
+                .font(.caption)
+                .padding(.horizontal)
+        }
+    }
+
+    @ViewBuilder
+    private var createButton: some View {
+        PrimaryActionButton(
+            title: String(localized: "trip.create.button"),
+            isLoading: viewModel.isLoading,
+            action: {
+                Task {
+                    await viewModel.createTrip()
+                }
+            }
+        )
     }
 }
 

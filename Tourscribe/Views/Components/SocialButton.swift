@@ -9,7 +9,7 @@ struct SocialButton: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: StyleGuide.Spacing.standard) {
                 Image(icon)
                     .resizable()
                     .scaledToFit()
@@ -19,7 +19,7 @@ struct SocialButton: View {
             }
             .foregroundColor(foregroundColor)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, StyleGuide.Padding.medium)
             .background(backgroundColor)
             .clipShape(Capsule())
         }

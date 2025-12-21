@@ -5,7 +5,9 @@ import Combine
 class MyTripsViewModel: ObservableObject {
     @Published var trips: [Trip] = []
     @Published var isLoading: Bool = false
-    @Published var alert: AlertType?
+    @Published var alert: AlertType? = nil
+    @Published var selectedSegment: TripListSegment = .upcoming
+    @Published var isShowingCreateTrip = false
     
     private let tripService: TripServiceProtocol
     
@@ -33,5 +35,23 @@ class MyTripsViewModel: ObservableObject {
         }
         
         isLoading = false
+    }
+    
+    func deleteTrip(tripId: String) async {
+        guard let id = Int64(tripId) else {
+            print("Invalid tripId format: \(tripId)")
+            return
+        }
+
+        do {
+            try await tripService.deleteTrip(tripId: tripId)
+        } catch {
+            // If the delete fails, fetch the trips again to revert the UI change
+            print("Error deleting trip: \(error.localizedDescription)")
+            alert = .error(String(localized: "error.trip.delete_failed"))
+            await fetchTrips(for: selectedSegment)
+        }
+        
+        trips.removeAll { $0.id == id }
     }
 }

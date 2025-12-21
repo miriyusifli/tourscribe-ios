@@ -56,4 +56,12 @@ class TripService: TripServiceProtocol {
             
         return trips
     }
+    
+    func deleteTrip(tripId: String) async throws {
+        try await client
+            .from("trips")
+            .delete()
+            .eq("id", value: tripId)
+            .execute()
+    }
 }

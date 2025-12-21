@@ -4,7 +4,7 @@ struct LoadingView: View {
     var title: String? = nil
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: StyleGuide.Spacing.large) {
             GifImage("loading")
                 .frame(width: 80, height: 80)
             
@@ -16,10 +16,10 @@ struct LoadingView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.vertical, 30)
-        .padding(.horizontal, 40)
+        .padding(.vertical, StyleGuide.Padding.large)
+        .padding(.horizontal, StyleGuide.Padding.xlarge)
         .background(
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.xlarge)
                 .fill(Color.white)
         )
     }

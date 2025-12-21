@@ -11,9 +11,9 @@ struct CustomDatePicker: View {
                 .datePickerStyle(.compact)
                 .tint(.primaryColor)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.horizontal, StyleGuide.Padding.medium)
+        .padding(.vertical, StyleGuide.Padding.standard)
         .background(.white)
-        .cornerRadius(12)
+        .cornerRadius(StyleGuide.CornerRadius.standard)
     }
 }

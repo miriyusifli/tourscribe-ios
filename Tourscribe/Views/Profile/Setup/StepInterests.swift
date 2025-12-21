@@ -11,11 +11,11 @@ struct StepInterests: View {
     ]
     
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: StyleGuide.Spacing.xlarge) {
             headerView
             
             ScrollView(showsIndicators: false) {
-                LazyVGrid(columns: columns, spacing: 16) {
+                LazyVGrid(columns: columns, spacing: StyleGuide.Spacing.large) {
                     ForEach(interests, id: \.id) { interest in
                         InterestBadge(
                             emoji: interest.emoji,
@@ -45,10 +45,10 @@ struct StepInterests: View {
         Text("\(selectedInterests.count)/10")
             .font(.caption)
             .foregroundColor(.primaryColor)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.horizontal, StyleGuide.Padding.standard)
+            .padding(.vertical, StyleGuide.Padding.small)
             .background(Color.primaryColor.opacity(0.1))
-            .cornerRadius(20)
+            .cornerRadius(StyleGuide.CornerRadius.xlarge)
     }
     
     private var hintText: some View {

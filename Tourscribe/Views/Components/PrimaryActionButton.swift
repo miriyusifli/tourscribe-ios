@@ -23,7 +23,7 @@ struct PrimaryActionButton: View {
             .font(.system(size: 18, weight: .bold))
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, StyleGuide.Padding.medium)
             .background(Color.primaryColor)
             .clipShape(Capsule())
             .shadow(color: Color.primaryColor.opacity(0.3), radius: 10, x: 0, y: 5)

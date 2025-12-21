@@ -9,13 +9,13 @@ struct StepPersonalInfo: View {
     let genders = Gender.allCases
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: StyleGuide.Spacing.xlarge) {
             HStack {
                 CustomTextField(placeholder: String(localized: "placeholder.first_name"), text: $firstName)
                 CustomTextField(placeholder: String(localized: "placeholder.last_name"), text: $lastName)
             }
             
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: StyleGuide.Spacing.standard) {
                 CustomDatePicker(
                     title: String(localized: "label.date_of_birth"),
                     selection: $birthDate,
@@ -23,18 +23,18 @@ struct StepPersonalInfo: View {
                 )
             }
             
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: StyleGuide.Spacing.standard) {
             
-                HStack(spacing: 12) {
+                HStack(spacing: StyleGuide.Spacing.standard) {
                     ForEach(genders) { option in
                         Button(action: { gender = option.rawValue }) {
                             Text(option.localizedName)
                                 .font(.system(size: 16))
                                 .foregroundColor(gender == option.rawValue ? .white : .textPrimary)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
+                                .padding(.vertical, StyleGuide.Padding.medium)
                                 .background(gender == option.rawValue ? Color.primaryColor : Color.white)
-                                .cornerRadius(12)
+                                .cornerRadius(StyleGuide.CornerRadius.standard)
                         }
                     }
                 }

@@ -4,15 +4,15 @@ struct TripCardView: View {
     let trip: Trip
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: StyleGuide.Spacing.standard) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: StyleGuide.Spacing.medium) {
                     Text(trip.name)
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundColor(.textPrimary)
                         .lineLimit(2)
                     
-                    HStack(spacing: 6) {
+                    HStack(spacing: StyleGuide.Spacing.medium) {
                         Image(systemName: "calendar")
                             .font(.caption)
                         Text(formattedDates)
@@ -26,11 +26,11 @@ struct TripCardView: View {
                 statusBadge
             }
         }
-        .padding(20)
+        .padding(StyleGuide.Padding.large)
         .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.xlarge))
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.xlarge)
                 .stroke(Color.white.opacity(0.5), lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: 8)
@@ -56,17 +56,17 @@ struct TripCardView: View {
         if let status = tripStatus {
             switch status {
             case .current:
-                HStack(spacing: 6) {
+                HStack(spacing: StyleGuide.Spacing.medium) {
                     Circle()
                         .fill(Color.green)
-                        .frame(width: 8, height: 8)
+                        .frame(width: StyleGuide.Spacing.medium, height: StyleGuide.Spacing.medium)
                     Text(status.localizedName)
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.green)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .padding(.horizontal, StyleGuide.Padding.standard)
+                .padding(.vertical, StyleGuide.Padding.small)
                 .background(Color.green.opacity(0.1))
                 .clipShape(Capsule())
                 .overlay(
@@ -78,8 +78,8 @@ struct TripCardView: View {
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.textSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, StyleGuide.Padding.standard)
+                    .padding(.vertical, StyleGuide.Padding.small)
                     .background(Color.black.opacity(0.05))
                     .clipShape(Capsule())
             case .upcoming:

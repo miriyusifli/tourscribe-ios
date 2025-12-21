@@ -10,35 +10,13 @@ struct ProfileSetupView: View {
     }
     
     var body: some View {
-        VStack(spacing: 24) {
-            // Header
-            VStack(alignment: .leading, spacing: 12) {
-                Text(String(localized: "profile.setup.identity.title"))
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundColor(.textPrimary)
-                
-                // Progress Bar (Step 1 of 2)
-                SetupProgressBar(totalSteps: 2, currentStep: 1)
-            }
-            .padding(.top, 24)
-            
-            // Content: Personal Info Form
-            StepPersonalInfo(
-                firstName: $viewModel.firstName,
-                lastName: $viewModel.lastName,
-                birthDate: $viewModel.birthDate,
-                gender: $viewModel.gender
-            )
-            
+        VStack(spacing: StyleGuide.Padding.large) {
+            header
+            content
             Spacer()
-            
-            // Continue Button
-            PrimaryActionButton(
-                title: String(localized: "button.continue"),
-                action: viewModel.continueToInterests
-            )
+            footer
         }
-        .padding(24)
+        .padding(StyleGuide.Padding.large)
         .background(Color.background)
         .alert(item: $viewModel.alert) { alertType in
             Alert(
@@ -50,5 +28,35 @@ struct ProfileSetupView: View {
         .navigationDestination(isPresented: $viewModel.navigateToInterests) {
             InterestsSetupView(viewModel: viewModel, onSetupSuccess: onSetupSuccess)
         }
+    }
+
+    @ViewBuilder
+    private var header: some View {
+        VStack(alignment: .leading, spacing: StyleGuide.Spacing.standard) {
+            Text(String(localized: "profile.setup.identity.title"))
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundColor(.textPrimary)
+            
+            SetupProgressBar(totalSteps: 2, currentStep: 1)
+        }
+        .padding(.top, StyleGuide.Padding.large)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        StepPersonalInfo(
+            firstName: $viewModel.firstName,
+            lastName: $viewModel.lastName,
+            birthDate: $viewModel.birthDate,
+            gender: $viewModel.gender
+        )
+    }
+
+    @ViewBuilder
+    private var footer: some View {
+        PrimaryActionButton(
+            title: String(localized: "button.continue"),
+            action: viewModel.continueToInterests
+        )
     }
 }

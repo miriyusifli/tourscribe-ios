@@ -5,7 +5,7 @@ struct SetupProgressBar: View {
     let currentStep: Int
     
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: StyleGuide.Spacing.medium) {
             ForEach(1...totalSteps, id: \.self) { step in
                 Capsule()
                     .fill(step <= currentStep ? Color.primaryColor : Color.gray.opacity(0.3))

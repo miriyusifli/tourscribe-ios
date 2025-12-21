@@ -9,7 +9,7 @@ struct InterestBadge: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(spacing: StyleGuide.Spacing.medium) {
                 Text(emoji)
                     .font(.system(size: 40))
                     .scaleEffect(isSelected ? 1.2 : 1.0)
@@ -24,15 +24,15 @@ struct InterestBadge: View {
                     .foregroundColor(isSelected ? .white.opacity(0.8) : .textSecondary)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 20)
+            .padding(.vertical, StyleGuide.Padding.large)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.large)
                     .fill(isSelected ? Color.primaryColor : Color.white)
                     .shadow(
                         color: isSelected ? Color.primaryColor.opacity(0.4) : Color.black.opacity(0.05),
-                        radius: isSelected ? 12 : 4,
+                        radius: isSelected ? StyleGuide.CornerRadius.standard : StyleGuide.CornerRadius.small,
                         x: 0,
-                        y: isSelected ? 6 : 2
+                        y: isSelected ? StyleGuide.Spacing.medium : StyleGuide.Spacing.small
                     )
             )
         }
