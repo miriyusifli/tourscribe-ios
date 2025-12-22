@@ -1,3 +1,4 @@
+import SwiftUI
 import Foundation
 import CoreGraphics
 
@@ -18,6 +19,7 @@ enum StyleGuide {
         static let large: CGFloat = 20
         static let xlarge: CGFloat = 24
         static let xxlarge: CGFloat = 32
+        static let huge: CGFloat = 60
     }
     
     enum CornerRadius {
@@ -26,5 +28,21 @@ enum StyleGuide {
         static let large: CGFloat = 16
         static let xlarge: CGFloat = 20
         static let xxlarge: CGFloat = 24
+    }
+
+    enum IconSize {
+        static let small: CGFloat = 16
+        static let standard: CGFloat = 24
+        static let medium: CGFloat = 32
+        static let large: CGFloat = 48
+        static let xlarge: CGFloat = 60
+    }
+
+    enum Typography {
+        static let largeTitle: Font = .system(size: 34, weight: .bold, design: .rounded)
+    }
+
+    enum Dimensions {
+        static let standardControlHeight: CGFloat = 42
     }
 }

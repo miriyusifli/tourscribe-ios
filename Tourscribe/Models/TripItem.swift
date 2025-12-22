@@ -1,11 +1,5 @@
 import Foundation
 
-enum TripItemType: String, Codable, CaseIterable, Hashable {
-    case flight
-    case accommodation
-    case activity
-    case restaurant
-}
 
 // MARK: - Metadata Models
 
