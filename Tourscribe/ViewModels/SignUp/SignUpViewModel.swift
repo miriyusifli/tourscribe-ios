@@ -7,11 +7,11 @@ import Combine
 
 /// Tracks the entire state of the sign-up form and authentication context
 struct SignUpState {
-    var socialUserId: String?
+    var userId: String?
     var email: String = ""
     var password: String = ""
     
-    var isSocialSignUp: Bool { socialUserId != nil }
+    var isSocialSignUp: Bool { userId != nil }
 }
 
 @Observable
@@ -40,7 +40,7 @@ class SignUpViewModel {
     
     var isLoading = false
     var alert: AlertType?
-    var signUpSuccess = false
+
     var isEmailValid = false
     var isPasswordValid = false
     
@@ -101,7 +101,7 @@ class SignUpViewModel {
     }
     
     private func handleAuthSuccess(user: User) {
-        state.socialUserId = user.id.uuidString
+        state.userId = user.id.uuidString
         if let email = user.email {
             state.email = email
         }

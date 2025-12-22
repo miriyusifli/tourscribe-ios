@@ -16,12 +16,11 @@ enum TripListSegment: Int, CaseIterable, Identifiable {
     }
 }
 
+
 struct MyTrips: View {
     // MARK: - State
     @StateObject private var viewModel = MyTripsViewModel()
     @State private var navigationPath = NavigationPath()
-    @State private var isShowingCreateTrip = false
-    @State private var selectedSegment: TripListSegment = .upcoming
     @State private var selectedTab = 0
 
     var body: some View {
@@ -30,60 +29,48 @@ struct MyTrips: View {
             mainTabTitle: String(localized: "tab.my_trips"),
             mainTabIcon: "suitcase.fill"
         ) {
-            MyTripsContentView(
-                viewModel: viewModel,
-                navigationPath: $navigationPath,
-                isShowingCreateTrip: $isShowingCreateTrip,
-                selectedSegment: $selectedSegment
-            )
+            content
         }
     }
-}
 
-private struct MyTripsContentView: View {
-    @ObservedObject var viewModel: MyTripsViewModel
-    @Binding var navigationPath: NavigationPath
-    @Binding var isShowingCreateTrip: Bool
-    @Binding var selectedSegment: TripListSegment
-
-    var body: some View {
+    @ViewBuilder
+    private var content: some View {
         NavigationStack(path: $navigationPath) {
             AppView {
-                VStack(spacing: 24) {
+                VStack(spacing: StyleGuide.Spacing.xlarge) {
                     HeaderView()
-                    PickerView(selectedSegment: $selectedSegment)
-                    TripListView(
-                        viewModel: viewModel,
-                        selectedSegment: $selectedSegment,
-                        isShowingCreateTrip: $isShowingCreateTrip
-                    )
+                    PickerView(selectedSegment: $viewModel.selectedSegment)
+                    TripListView(viewModel: viewModel)
                 }
-                .padding(.top, 10)
+                .padding(.top, StyleGuide.Padding.standard)
             }
         }
-        .task(id: selectedSegment) { await loadData() }
-        .onChange(of: isShowingCreateTrip) { oldValue, newValue in
-            if !newValue { Task { await loadData() } }
+        .task(id: viewModel.selectedSegment) {
+            await viewModel.fetchTrips(for: viewModel.selectedSegment)
         }
-        .sheet(isPresented: $isShowingCreateTrip) {
+        .onChange(of: viewModel.isShowingCreateTrip) { _, newValue in
+            if !newValue {
+                Task {
+                    await viewModel.fetchTrips(for: viewModel.selectedSegment)
+                }
+            }
+        }
+        .sheet(isPresented: $viewModel.isShowingCreateTrip) {
             NavigationStack {
                 CreateTripView(navigationPath: $navigationPath)
             }
         }
         .navigationDestination(for: Trip.self) { trip in
-            Text(String(localized: "Trip Details: \(trip.name)"))
+            // TODO: Implement Trip Details View
+            Text("Trip Details: \(trip.name)")
         }
         .alert(item: $viewModel.alert) { alert in
             Alert(
                 title: Text(alert.title),
                 message: Text(alert.message),
-                dismissButton: .default(Text(String(localized: "button.ok")))
+                dismissButton: .default(Text(String(localized: "button.ok", defaultValue: "OK")))
             )
         }
-    }
-
-    private func loadData() async {
-        await viewModel.fetchTrips(for: selectedSegment)
     }
 }
 
@@ -96,7 +83,7 @@ private struct HeaderView: View {
             
             Spacer()
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, StyleGuide.Padding.large)
     }
 }
 
@@ -116,33 +103,73 @@ private struct PickerView: View {
             items: TripListSegment.allCases.map { $0.title }
         )
         .frame(height: 42)
-        .padding(.horizontal, 24)
+        .padding(.horizontal, StyleGuide.Padding.large)
     }
 }
 
 private struct TripListView: View {
     @ObservedObject var viewModel: MyTripsViewModel
-    @Binding var selectedSegment: TripListSegment
-    @Binding var isShowingCreateTrip: Bool
 
     var body: some View {
         List {
-            if viewModel.isLoading && viewModel.trips.isEmpty {
-                RefreshLoadingView()
-            } else if viewModel.trips.isEmpty {
-                EmptyStateView(selectedSegment: selectedSegment)
-            } else {
-                TripsListView(trips: viewModel.trips)
-            }
+            listContent
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .background(Color.clear)
         .refreshable {
-            await viewModel.fetchTrips(for: selectedSegment)
+            await viewModel.fetchTrips(for: viewModel.selectedSegment)
         }
         .safeAreaInset(edge: .bottom) {
-            AddButton(isShowingCreateTrip: $isShowingCreateTrip)
+            AddButton(viewModel: viewModel)
+        }
+    }
+
+    @ViewBuilder
+    private var listContent: some View {
+        if viewModel.isLoading && viewModel.trips.isEmpty {
+            RefreshLoadingView()
+        } else if viewModel.trips.isEmpty {
+            let message = viewModel.selectedSegment == .upcoming
+                ? String(localized: "empty.upcoming", defaultValue: "No upcoming trips")
+                : String(localized: "empty.past", defaultValue: "No past trips")
+            EmptyStateView(imageName: "suitcase", message: message)
+        } else {
+            tripRows
+        }
+    }
+    
+    @ViewBuilder
+    private var tripRows: some View {
+        ForEach(viewModel.trips) { trip in
+            ZStack {
+                TripCardView(trip: trip)
+                NavigationLink(value: trip) {
+                    EmptyView()
+                }
+                .opacity(0)
+            }
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                Button(role: .destructive) {
+                    Task {
+                        await viewModel.deleteTrip(tripId: String(trip.id))
+                    }
+                } label: {
+                    Label(String(localized: "button.delete", defaultValue: "Delete"), systemImage: "trash.fill")
+                }
+                .tint(.red)
+
+                Button {
+                    // TODO: Implement trip editing logic
+                    print("Edit trip: \(trip.name)")
+                } label: {
+                    Label(String(localized: "button.edit", defaultValue: "Edit"), systemImage: "pencil")
+                }
+                .tint(.blue)
+            }
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: StyleGuide.Padding.standard, leading: StyleGuide.Padding.xlarge, bottom: StyleGuide.Padding.standard, trailing: StyleGuide.Padding.xlarge))
         }
     }
 }
@@ -153,19 +180,20 @@ private struct RefreshLoadingView: View {
             .frame(maxWidth: .infinity, alignment: .center)
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
-            .padding(.top, 40)
+            .padding(.top, StyleGuide.Padding.xxlarge)
     }
 }
 
 private struct EmptyStateView: View {
-    let selectedSegment: TripListSegment
+    let imageName: String
+    let message: String
 
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "suitcase")
+        VStack(spacing: StyleGuide.Spacing.standard) {
+            Image(systemName: imageName)
                 .font(.system(size: 48))
                 .foregroundColor(.textSecondary)
-            Text(selectedSegment == .upcoming ? String(localized: "empty.upcoming") : String(localized: "empty.past"))
+            Text(message)
                 .font(.headline)
                 .foregroundColor(.textSecondary)
         }
@@ -176,29 +204,14 @@ private struct EmptyStateView: View {
     }
 }
 
-private struct TripsListView: View {
-    let trips: [Trip]
-
-    var body: some View {
-        ForEach(trips) { trip in
-            NavigationLink(value: trip) {
-                TripCardView(trip: trip)
-            }
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 10, leading: 24, bottom: 10, trailing: 24))
-        }
-    }
-}
-
 private struct AddButton: View {
-    @Binding var isShowingCreateTrip: Bool
+    @ObservedObject var viewModel: MyTripsViewModel
     
     var body: some View {
         HStack {
             Spacer()
             Button(action: {
-                isShowingCreateTrip = true
+                viewModel.isShowingCreateTrip = true
             }) {
                 Image(systemName: "plus")
                     .font(.system(size: 24, weight: .bold))
@@ -208,12 +221,13 @@ private struct AddButton: View {
                     .clipShape(Circle())
                     .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
             }
-            .padding(.trailing, 20)
-            .padding(.bottom, 20)
+            .padding(.trailing, StyleGuide.Padding.large)
+            .padding(.bottom, StyleGuide.Padding.large)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }
+
 
 
 #Preview {

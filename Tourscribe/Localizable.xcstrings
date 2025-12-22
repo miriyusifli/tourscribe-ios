@@ -210,6 +210,30 @@
         }
       }
     },
+    "button.map_view": {
+      "comment": "Button title for map view.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Map View"
+          }
+        }
+      }
+    },
+    "button.recommendations": {
+      "comment": "Button title for trip recommendations.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommendations"
+          }
+        }
+      }
+    },
     "button.ok": {
       "comment": "The text for an \"OK\" button.",
       "extractionState": "manual",
@@ -241,6 +265,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "No upcoming trips"
+          }
+        }
+      }
+    },
+    "error.auth.invalid_credentials": {
+      "comment": "Error message for invalid login credentials.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid email or password. Please try again."
           }
         }
       }

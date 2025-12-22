@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 import Auth
+import Foundation
 
 @Observable
 @MainActor
@@ -32,8 +33,15 @@ class SignInViewModel {
             do {
                 let user = try await authService.signIn(email: email, password: password)
                 await checkProfileAndProceed(userId: user.id)
+            } catch let error as Auth.AuthError {
+                if case .invalidCredentials = error.errorCode {
+                    alert = .error(String(localized: "error.auth.invalid_credentials"))
+                } else {
+                    alert = .error(String(localized: "error.generic.unknown"))
+                }
             } catch {
                 alert = .error(String(localized: "error.generic.unknown"))
+
             }
         }
     }

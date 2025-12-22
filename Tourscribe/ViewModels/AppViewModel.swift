@@ -17,21 +17,19 @@ class AppViewModel {
     
     func checkSession() {
         Task {
-            // Check if there is a valid session stored
-            if await authService.session != nil {
-                isLoggedIn = true
+            if let session = await authService.session {
+                // Check if a profile exists for the authenticated user
+                let profileExists = (try? await authService.getProfile(userId: session.user.id.uuidString)) != nil
+                if profileExists {
+                    isLoggedIn = true
+                }
             }
             isLoading = false
             
-            // Listen for future changes (like logout)
+            // Listen for logout events
             for await (event, _) in authService.authStateChanges {
-                switch event {
-                case .signedIn:
-                    isLoggedIn = true
-                case .signedOut:
+                if event == .signedOut {
                     isLoggedIn = false
-                default:
-                    break
                 }
             }
         }

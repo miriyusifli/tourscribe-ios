@@ -32,13 +32,9 @@ struct SignUpView: View {
                 dismissButton: .cancel(Text(String(localized: "button.ok")))
             )
         }
-        .onChange(of: viewModel.signUpSuccess) { _, success in
-            if success {
-                onSignUpSuccess()
-            }
-        }
+
         .navigationDestination(isPresented: $viewModel.shouldNavigateToProfileSetup) {
-            if let userId = viewModel.state.socialUserId {
+            if let userId = viewModel.state.userId {
                 ProfileSetupView(userId: userId, email: viewModel.email, onSetupSuccess: onSignUpSuccess)
                     .navigationBarBackButtonHidden(true)
             }
