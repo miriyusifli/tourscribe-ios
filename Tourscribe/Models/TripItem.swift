@@ -46,12 +46,12 @@ struct TripItem: Identifiable, Codable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id, name, metadata
-        case tripId = "trip_id"
-        case itemType = "item_type"
-        case startTime = "start_time"
-        case endTime = "end_time"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case tripId
+        case itemType
+        case startTime
+        case endTime
+        case createdAt
+        case updatedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -65,22 +65,22 @@ struct TripItem: Identifiable, Codable, Hashable {
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
 
-        // Check if the 'metadata' key exists before attempting to decode it.
+        
         if container.contains(.metadata) {
-            // Based on the itemType, decode the metadata object into the appropriate struct.
-            switch itemType {
-            case .flight:
-                metadata = .flight(try container.decode(FlightMetadata.self, forKey: .metadata))
-            case .accommodation:
-                metadata = .accommodation(try container.decode(AccommodationMetadata.self, forKey: .metadata))
-            case .activity:
-                metadata = .activity(try container.decode(ActivityMetadata.self, forKey: .metadata))
-            case .restaurant:
-                metadata = .restaurant(try container.decode(RestaurantMetadata.self, forKey: .metadata))
-            }
+                // Based on the itemType, decode the metadata object into the appropriate struct.
+                switch itemType {
+                case .flight:
+                    metadata = .flight(try container.decode(FlightMetadata.self, forKey: .metadata))
+                case .accommodation:
+                    metadata = .accommodation(try container.decode(AccommodationMetadata.self, forKey: .metadata))
+                case .activity:
+                    metadata = .activity(try container.decode(ActivityMetadata.self, forKey: .metadata))
+                case .restaurant:
+                    metadata = .restaurant(try container.decode(RestaurantMetadata.self, forKey: .metadata))
+                }
         } else {
-            // If the 'metadata' key is not present, set metadata to nil.
-            metadata = nil
+                // If the 'metadata' key is not present, set metadata to nil.
+                metadata = nil
         }
     }
 
