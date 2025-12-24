@@ -10,47 +10,63 @@ class CreateTripItemViewModel {
     var name = ""
     var selectedItemType: TripItemType = .activity
     var startTime = Date()
-    var endTime: Date? = nil
+    var endTime = Date()
+    
+    // Single location (for accommodation, restaurant, activity)
+    var location: Location? = nil
+    
+    // Multi-location (for flight, transport)
+    var departureLocation: Location? = nil
+    var arrivalLocation: Location? = nil
     
     // Metadata properties
     var airline: String?
     var flightNumber: String?
-    var address: String?
-    var description: String?
+    var checkIn: String?
+    var checkOut: String?
+    var activityDescription: String?
     var cuisine: String?
+    var carrier: String?
+    var vehicleNumber: String?
     
     // UI State
     var isLoading = false
-    var errorMessage: String? // Changed from 'alert'
-    var createdItem: TripItem? = nil // Added for success signal
+    var errorMessage: String?
+    var createdItem: TripItem? = nil
 
     init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService()) {
         self.tripId = tripId
         self.tripItemService = tripItemService
-        self.endTime = Calendar.current.date(byAdding: .hour, value: 1, to: self.startTime)
+        self.endTime = Calendar.current.date(byAdding: .hour, value: 1, to: self.startTime) ?? self.startTime
     }
     
-    func createTripItem() async { // No longer returns a value
-        errorMessage = nil // Clear previous error
+    func createTripItem() async {
+        errorMessage = nil
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Please enter a name for the item." // TODO: Localize
+            errorMessage = String(localized: "error.trip_item.name_required")
             return
+        }
+
+        // Validate locations based on type
+        let locations: [Location]
+        if selectedItemType.isMultiLocation {
+            guard let departure = departureLocation, let arrival = arrivalLocation else {
+                errorMessage = String(localized: "error.trip_item.locations_required")
+                return
+            }
+            locations = [departure.withSequence(0), arrival.withSequence(1)]
+        } else {
+            guard let loc = location else {
+                errorMessage = String(localized: "error.trip_item.location_required")
+                return
+            }
+            locations = [loc.withSequence(0)]
         }
 
         isLoading = true
         defer { isLoading = false }
         
-        let metadata: TripItemMetadata?
-        switch selectedItemType {
-        case .flight:
-            metadata = .flight(FlightMetadata(airline: airline, flightNumber: flightNumber))
-        case .accommodation:
-            metadata = .accommodation(AccommodationMetadata(address: address))
-        case .activity:
-            metadata = .activity(ActivityMetadata(description: description))
-        case .restaurant:
-            metadata = .restaurant(RestaurantMetadata(cuisine: cuisine))
-        }
+        let metadata = buildMetadata()
         
         let request = TripItemCreateRequest(
             tripId: tripId,
@@ -62,10 +78,25 @@ class CreateTripItemViewModel {
         )
         
         do {
-            let newItem = try await tripItemService.createTripItem(item: request)
-            self.createdItem = newItem // Set the published property on success
+            let newItem = try await tripItemService.createTripItem(item: request, locations: locations)
+            self.createdItem = newItem
         } catch {
-            self.errorMessage = String(localized: "error.generic.unknown") // Set error message
+            self.errorMessage = String(localized: "error.generic.unknown")
+        }
+    }
+    
+    private func buildMetadata() -> TripItemMetadata {
+        switch selectedItemType {
+        case .flight:
+            return .flight(FlightMetadata(airline: airline, flightNumber: flightNumber))
+        case .accommodation:
+            return .accommodation(AccommodationMetadata(checkIn: checkIn, checkOut: checkOut))
+        case .activity:
+            return .activity(ActivityMetadata(description: activityDescription))
+        case .restaurant:
+            return .restaurant(RestaurantMetadata(cuisine: cuisine))
+        case .transport:
+            return .transport(TransportMetadata(carrier: carrier, vehicleNumber: vehicleNumber))
         }
     }
 }

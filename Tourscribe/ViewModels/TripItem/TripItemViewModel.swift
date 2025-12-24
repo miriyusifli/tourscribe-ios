@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 @Observable
 @MainActor
@@ -22,11 +21,11 @@ class TripItemViewModel {
         do {
             tripItems = try await tripItemService.fetchTripItems(for: tripId)
         } catch {
+            print(error)
             alert = .error(String(localized: "error.generic.unknown"))
         }
         isLoading = false
     }
-    
 
     func updateTripItem(item: TripItem) async {
         guard let index = tripItems.firstIndex(where: { $0.id == item.id }) else { return }
@@ -40,7 +39,11 @@ class TripItemViewModel {
         )
         
         do {
-            let updatedItem = try await tripItemService.updateTripItem(itemId: item.id, data: request)
+            let updatedItem = try await tripItemService.updateTripItem(
+                itemId: item.id,
+                data: request,
+                locations: item.locations
+            )
             tripItems[index] = updatedItem
         } catch {
             alert = .error(String(localized: "error.generic.unknown"))

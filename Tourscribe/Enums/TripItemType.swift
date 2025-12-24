@@ -1,10 +1,12 @@
 import SwiftUI
+import MapKit
 
 enum TripItemType: String, Codable, CaseIterable, Hashable {
     case flight
     case accommodation
     case activity
     case restaurant
+    case transport
 
     var icon: String {
         switch self {
@@ -12,6 +14,7 @@ enum TripItemType: String, Codable, CaseIterable, Hashable {
         case .accommodation: return "bed.double.fill"
         case .activity: return "figure.walk"
         case .restaurant: return "fork.knife"
+        case .transport: return "bus.fill"
         }
     }
     
@@ -21,6 +24,7 @@ enum TripItemType: String, Codable, CaseIterable, Hashable {
         case .accommodation: return .purple
         case .activity: return .green
         case .restaurant: return .orange
+        case .transport: return .teal
         }
     }
     
@@ -34,6 +38,32 @@ enum TripItemType: String, Codable, CaseIterable, Hashable {
             return "Plan tours, hikes, and visits."
         case .restaurant:
             return "Bookmark dining and reservations."
+        case .transport:
+            return "Track trains, buses, and transfers."
+        }
+    }
+    
+    var isMultiLocation: Bool {
+        switch self {
+        case .flight, .transport:
+            return true
+        case .accommodation, .activity, .restaurant:
+            return false
+        }
+    }
+    
+    var pointOfInterestFilter: MKPointOfInterestFilter? {
+        switch self {
+        case .flight:
+            return MKPointOfInterestFilter(including: [.airport])
+        case .accommodation:
+            return MKPointOfInterestFilter(including: [.hotel])
+        case .restaurant:
+            return MKPointOfInterestFilter(including: [.restaurant, .cafe, .bakery, .foodMarket])
+        case .transport:
+            return MKPointOfInterestFilter(including: [.publicTransport])
+        case .activity:
+            return nil // Show all for activities
         }
     }
 }

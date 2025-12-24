@@ -1,44 +1,73 @@
 import Foundation
+import Supabase
 
-// DTO for creating a TripItem
-struct TripItemCreateRequest: Encodable {
+private let iso8601Formatter = ISO8601DateFormatter()
+
+struct TripItemCreateRequest {
     let tripId: Int64
     let name: String
     let itemType: TripItemType
-    let startTime: Date?
-    let endTime: Date?
-    let metadata: TripItemMetadata?
-
-    enum CodingKeys: String, CodingKey {
-        case tripId = "trip_id"
-        case name
-        case itemType = "item_type"
-        case startTime = "start_time"
-        case endTime = "end_time"
-        case metadata
+    let startTime: Date
+    let endTime: Date
+    let metadata: TripItemMetadata
+    
+    func toRPCParams(locations: [Location]) -> [String: AnyJSON] {
+        [
+            "p_trip_id": .integer(Int(tripId)),
+            "p_name": .string(name),
+            "p_item_type": .string(itemType.rawValue),
+            "p_start_time": .string(iso8601Formatter.string(from: startTime)),
+            "p_end_time": .string(iso8601Formatter.string(from: endTime)),
+            "p_metadata": metadata.toAnyJSON(),
+            "p_locations": .array(locations.map { $0.toAnyJSON() })
+        ]
     }
+}
 
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(tripId, forKey: .tripId)
-        try container.encode(name, forKey: .name)
-        try container.encode(itemType, forKey: .itemType)
-        try container.encodeIfPresent(startTime, forKey: .startTime)
-        try container.encodeIfPresent(endTime, forKey: .endTime)
+// MARK: - AnyJSON Helpers
 
-        // The metadata field needs custom encoding to handle the different associated types.
-        switch metadata {
-        case .flight(let flightData):
-            try container.encode(flightData, forKey: .metadata)
-        case .accommodation(let accommodationData):
-            try container.encode(accommodationData, forKey: .metadata)
-        case .activity(let activityData):
-            try container.encode(activityData, forKey: .metadata)
-        case .restaurant(let restaurantData):
-            try container.encode(restaurantData, forKey: .metadata)
-        case .none:
-            // If metadata is nil, it will be omitted from the encoded JSON.
-            break
+extension Location {
+    func toAnyJSON() -> AnyJSON {
+        var dict: [String: AnyJSON] = [
+            "sequence": .integer(sequence),
+            "name": .string(name),
+            "latitude": .double(latitude),
+            "longitude": .double(longitude)
+        ]
+        if let address = address {
+            dict["address"] = .string(address)
         }
+        return .object(dict)
+    }
+}
+
+extension TripItemMetadata {
+    func toAnyJSON() -> AnyJSON {
+        let encoder = JSONEncoder()
+        let data: Data
+        
+        switch self {
+        case .flight(let m): data = (try? encoder.encode(m)) ?? Data()
+        case .accommodation(let m): data = (try? encoder.encode(m)) ?? Data()
+        case .activity(let m): data = (try? encoder.encode(m)) ?? Data()
+        case .restaurant(let m): data = (try? encoder.encode(m)) ?? Data()
+        case .transport(let m): data = (try? encoder.encode(m)) ?? Data()
+        }
+        
+        guard let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return .null
+        }
+        
+        var result: [String: AnyJSON] = [:]
+        for (key, value) in dict {
+            switch value {
+            case let str as String: result[key] = .string(str)
+            case let num as Int: result[key] = .integer(num)
+            case let num as Double: result[key] = .double(num)
+            case let bool as Bool: result[key] = .bool(bool)
+            default: break
+            }
+        }
+        return .object(result)
     }
 }

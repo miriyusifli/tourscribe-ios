@@ -1,27 +1,28 @@
 import Foundation
 
-
 // MARK: - Metadata Models
 
 struct FlightMetadata: Codable, Hashable {
-    // TODO: Add specific properties for flight metadata
     let airline: String?
     let flightNumber: String?
 }
 
 struct AccommodationMetadata: Codable, Hashable {
-    // TODO: Add specific properties for accommodation metadata
-    let address: String?
+    let checkIn: String?
+    let checkOut: String?
 }
 
 struct ActivityMetadata: Codable, Hashable {
-    // TODO: Add specific properties for activity metadata
     let description: String?
 }
 
 struct RestaurantMetadata: Codable, Hashable {
-    // TODO: Add specific properties for restaurant metadata
     let cuisine: String?
+}
+
+struct TransportMetadata: Codable, Hashable {
+    let carrier: String?
+    let vehicleNumber: String?
 }
 
 enum TripItemMetadata: Hashable {
@@ -29,6 +30,7 @@ enum TripItemMetadata: Hashable {
     case accommodation(AccommodationMetadata)
     case activity(ActivityMetadata)
     case restaurant(RestaurantMetadata)
+    case transport(TransportMetadata)
 }
 
 // MARK: - TripItem Model
@@ -43,15 +45,17 @@ struct TripItem: Identifiable, Codable, Hashable {
     var metadata: TripItemMetadata?
     let createdAt: Date
     var updatedAt: Date?
+    var locations: [Location]
 
     enum CodingKeys: String, CodingKey {
         case id, name, metadata
-        case tripId
-        case itemType
-        case startTime
-        case endTime
-        case createdAt
-        case updatedAt
+        case tripId = "trip_id"
+        case itemType = "item_type"
+        case startTime = "start_time"
+        case endTime = "end_time"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case tripItemLocations = "trip_item_locations"
     }
 
     init(from decoder: Decoder) throws {
@@ -64,23 +68,30 @@ struct TripItem: Identifiable, Codable, Hashable {
         endTime = try container.decodeIfPresent(Date.self, forKey: .endTime)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
-
         
-        if container.contains(.metadata) {
-                // Based on the itemType, decode the metadata object into the appropriate struct.
-                switch itemType {
-                case .flight:
-                    metadata = .flight(try container.decode(FlightMetadata.self, forKey: .metadata))
-                case .accommodation:
-                    metadata = .accommodation(try container.decode(AccommodationMetadata.self, forKey: .metadata))
-                case .activity:
-                    metadata = .activity(try container.decode(ActivityMetadata.self, forKey: .metadata))
-                case .restaurant:
-                    metadata = .restaurant(try container.decode(RestaurantMetadata.self, forKey: .metadata))
-                }
+        // Decode locations from nested join
+        if let nestedLocations = try container.decodeIfPresent([Location].self, forKey: .tripItemLocations) {
+            locations = nestedLocations.sorted { $0.sequence < $1.sequence }
         } else {
-                // If the 'metadata' key is not present, set metadata to nil.
-                metadata = nil
+            locations = []
+        }
+        
+        // Decode metadata based on itemType
+        if container.contains(.metadata) {
+            switch itemType {
+            case .flight:
+                metadata = .flight(try container.decode(FlightMetadata.self, forKey: .metadata))
+            case .accommodation:
+                metadata = .accommodation(try container.decode(AccommodationMetadata.self, forKey: .metadata))
+            case .activity:
+                metadata = .activity(try container.decode(ActivityMetadata.self, forKey: .metadata))
+            case .restaurant:
+                metadata = .restaurant(try container.decode(RestaurantMetadata.self, forKey: .metadata))
+            case .transport:
+                metadata = .transport(try container.decode(TransportMetadata.self, forKey: .metadata))
+            }
+        } else {
+            metadata = nil
         }
     }
 
@@ -94,19 +105,39 @@ struct TripItem: Identifiable, Codable, Hashable {
         try container.encodeIfPresent(endTime, forKey: .endTime)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
-
+        
         switch metadata {
-        case .flight(let flightData):
-            try container.encode(flightData, forKey: .metadata)
-        case .accommodation(let accommodationData):
-            try container.encode(accommodationData, forKey: .metadata)
-        case .activity(let activityData):
-            try container.encode(activityData, forKey: .metadata)
-        case .restaurant(let restaurantData):
-            try container.encode(restaurantData, forKey: .metadata)
+        case .flight(let data):
+            try container.encode(data, forKey: .metadata)
+        case .accommodation(let data):
+            try container.encode(data, forKey: .metadata)
+        case .activity(let data):
+            try container.encode(data, forKey: .metadata)
+        case .restaurant(let data):
+            try container.encode(data, forKey: .metadata)
+        case .transport(let data):
+            try container.encode(data, forKey: .metadata)
         case .none:
-            // If metadata is nil, do nothing, it will be omitted from the encoded JSON
             break
         }
+    }
+}
+
+// MARK: - Convenience Accessors
+
+extension TripItem {
+    /// Single location for non-multi-location types
+    var location: Location? {
+        locations.first
+    }
+    
+    /// Departure location for flights/transport
+    var departureLocation: Location? {
+        locations.first { $0.sequence == 0 }
+    }
+    
+    /// Arrival location for flights/transport
+    var arrivalLocation: Location? {
+        locations.first { $0.sequence == 1 }
     }
 }
