@@ -65,18 +65,14 @@ struct BaseTimelineItemView<Content: View>: View {
     
     @ViewBuilder
     private var timeView: some View {
-        if let start = item.startTime {
-            VStack(alignment: .trailing, spacing: StyleGuide.Spacing.small) {
-                Text(DateFormatters.shortTime.string(from: start))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
-                
-                if let end = item.endTime {
-                    Text(DateFormatters.shortTime.string(from: end))
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
+        VStack(alignment: .trailing, spacing: StyleGuide.Spacing.small) {
+            Text(DateFormatters.shortTime.string(from: item.startDateTime))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+            
+            Text(DateFormatters.shortTime.string(from: item.endDateTime))
+                .font(.caption)
+                .foregroundStyle(.tertiary)
         }
     }
     

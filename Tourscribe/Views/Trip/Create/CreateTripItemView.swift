@@ -100,9 +100,9 @@ struct CreateTripItemView: View {
             
             locationSection
             
-            CustomDatePicker(title: String(localized: "trip_item.field.start_time"), selection: $viewModel.startTime, displayedComponents: [.date, .hourAndMinute])
+            CustomDatePicker(title: String(localized: "trip_item.field.start_time"), selection: $viewModel.startDateTime, displayedComponents: [.date, .hourAndMinute])
             
-            CustomDatePicker(title: String(localized: "trip_item.field.end_time"), selection: $viewModel.endTime, displayedComponents: [.date, .hourAndMinute])
+            CustomDatePicker(title: String(localized: "trip_item.field.end_time"), selection: $viewModel.endDateTime, displayedComponents: [.date, .hourAndMinute])
         }
     }
     
@@ -153,9 +153,9 @@ struct CreateTripItemView: View {
                 CustomTextField(placeholder: String(localized: "trip_item.field.check_in"), text: Binding($viewModel.checkIn, replacingNilWith: ""))
                 CustomTextField(placeholder: String(localized: "trip_item.field.check_out"), text: Binding($viewModel.checkOut, replacingNilWith: ""))
             case .activity:
-                CustomTextField(placeholder: String(localized: "trip_item.field.description"), text: Binding($viewModel.activityDescription, replacingNilWith: ""))
+                EmptyView()
             case .restaurant:
-                CustomTextField(placeholder: String(localized: "trip_item.field.cuisine"), text: Binding($viewModel.cuisine, replacingNilWith: ""))
+                EmptyView()
             case .transport:
                 CustomTextField(placeholder: String(localized: "trip_item.field.carrier"), text: Binding($viewModel.carrier, replacingNilWith: ""))
                 CustomTextField(placeholder: String(localized: "trip_item.field.vehicle_number"), text: Binding($viewModel.vehicleNumber, replacingNilWith: ""))

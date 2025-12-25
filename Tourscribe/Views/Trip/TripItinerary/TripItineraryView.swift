@@ -41,15 +41,14 @@ struct TripItineraryView: View {
                 addButton
             }
         }
-        .task { if !viewModel.isPreview { await viewModel.fetchTripItems() } }
+        .task { if viewModel.tripItems.isEmpty { await viewModel.fetchTripItems() } }
         .alert(item: $viewModel.alert) { alert in
             Alert(title: Text(alert.title), message: Text(alert.message), dismissButton: .default(Text(String(localized: "button.ok"))))
         }
         .sheet(isPresented: $viewModel.isShowingCreateSheet) { 
             NavigationStack {
                 CreateTripItemView(tripId: trip.id) { newItem in
-                    viewModel.tripItems.append(newItem)
-                    viewModel.tripItems.sort { ($0.startTime ?? .distantPast) < ($1.startTime ?? .distantPast) }
+                    viewModel.addItem(newItem)
                 }
             }
         }
@@ -141,8 +140,8 @@ struct TripItineraryView: View {
                 "trip_id": 30,
                 "name": "Flight to Munich",
                 "item_type": "flight",
-                "start_time": "2025-12-24T08:00:00Z",
-                "end_time": "2025-12-24T10:30:00Z",
+                "start_datetime": "2025-12-24T08:00:00Z",
+                "end_datetime": "2025-12-24T10:30:00Z",
                 "metadata": {"airline": "Lufthansa", "flight_number": "LH123"},
                 "created_at": "2025-12-24T16:44:36Z",
                 "updated_at": null,
@@ -156,8 +155,8 @@ struct TripItineraryView: View {
                 "trip_id": 30,
                 "name": "Hotel Bayerischer Hof",
                 "item_type": "accommodation",
-                "start_time": "2025-12-24T14:00:00Z",
-                "end_time": "2025-12-28T11:00:00Z",
+                "start_datetime": "2025-12-24T14:00:00Z",
+                "end_datetime": "2025-12-28T11:00:00Z",
                 "metadata": {"check_in": "14:00", "check_out": "11:00"},
                 "created_at": "2025-12-24T16:44:36Z",
                 "updated_at": null,
@@ -170,9 +169,9 @@ struct TripItineraryView: View {
                 "trip_id": 30,
                 "name": "Visit Marienplatz",
                 "item_type": "activity",
-                "start_time": "2025-12-24T16:00:00Z",
-                "end_time": "2025-12-24T18:00:00Z",
-                "metadata": {"description": "Explore the famous square and watch the Glockenspiel"},
+                "start_datetime": "2025-12-24T16:00:00Z",
+                "end_datetime": "2025-12-24T18:00:00Z",
+                "metadata": {},
                 "created_at": "2025-12-24T16:44:36Z",
                 "updated_at": null,
                 "trip_item_locations": [
@@ -184,9 +183,9 @@ struct TripItineraryView: View {
                 "trip_id": 30,
                 "name": "Dinner at Hofbräuhaus",
                 "item_type": "restaurant",
-                "start_time": "2025-12-24T19:00:00Z",
-                "end_time": "2025-12-24T21:00:00Z",
-                "metadata": {"cuisine": "Traditional Bavarian"},
+                "start_datetime": "2025-12-24T19:00:00Z",
+                "end_datetime": "2025-12-24T21:00:00Z",
+                "metadata": {},
                 "created_at": "2025-12-24T16:44:36Z",
                 "updated_at": null,
                 "trip_item_locations": [
@@ -198,8 +197,8 @@ struct TripItineraryView: View {
                 "trip_id": 30,
                 "name": "Train to Neuschwanstein",
                 "item_type": "transport",
-                "start_time": "2025-12-25T09:00:00Z",
-                "end_time": "2025-12-25T11:00:00Z",
+                "start_datetime": "2025-12-25T09:00:00Z",
+                "end_datetime": "2025-12-25T11:00:00Z",
                 "metadata": {"carrier": "Deutsche Bahn", "vehicle_number": "RE 57432"},
                 "created_at": "2025-12-24T16:44:36Z",
                 "updated_at": null,

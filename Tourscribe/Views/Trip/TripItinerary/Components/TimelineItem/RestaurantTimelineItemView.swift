@@ -10,14 +10,6 @@ struct RestaurantTimelineItemView: View {
             if let location = item.location {
                 SingleLocationView(location: location, isExpanded: isExpanded)
             }
-            if isExpanded { metadataView }
-        }
-    }
-    
-    @ViewBuilder
-    private var metadataView: some View {
-        if case .restaurant(let data) = item.metadata, let cuisine = data.cuisine {
-            MetadataRowView(icon: "fork.knife", text: cuisine)
         }
     }
 }

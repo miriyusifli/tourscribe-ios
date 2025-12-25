@@ -7,9 +7,9 @@ class TripItemService: TripItemServiceProtocol {
     func fetchTripItems(for tripId: Int64) async throws -> [TripItem] {
         let response = try await client
             .from("trip_items")
-            .select("id, trip_id, name, item_type, start_time, end_time, metadata, created_at, updated_at, trip_item_locations(*)")
+            .select("id, trip_id, name, item_type, start_datetime, end_datetime, metadata, created_at, updated_at, trip_item_locations(*)")
             .eq("trip_id", value: String(tripId))
-            .order("start_time", ascending: true, nullsFirst: false)
+            .order("start_datetime", ascending: true)
             .execute()
         
         return try JSONDecoders.iso8601.decode([TripItem].self, from: response.data)

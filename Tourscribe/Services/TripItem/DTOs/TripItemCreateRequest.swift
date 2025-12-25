@@ -7,8 +7,8 @@ struct TripItemCreateRequest {
     let tripId: Int64
     let name: String
     let itemType: TripItemType
-    let startTime: Date
-    let endTime: Date
+    let startDateTime: Date
+    let endDateTime: Date
     let metadata: TripItemMetadata
     
     func toRPCParams(locations: [Location]) -> [String: AnyJSON] {
@@ -16,8 +16,8 @@ struct TripItemCreateRequest {
             "p_trip_id": .integer(Int(tripId)),
             "p_name": .string(name),
             "p_item_type": .string(itemType.rawValue),
-            "p_start_time": .string(iso8601Formatter.string(from: startTime)),
-            "p_end_time": .string(iso8601Formatter.string(from: endTime)),
+            "p_start_datetime": .string(iso8601Formatter.string(from: startDateTime)),
+            "p_end_datetime": .string(iso8601Formatter.string(from: endDateTime)),
             "p_metadata": metadata.toAnyJSON(),
             "p_locations": .array(locations.map { $0.toAnyJSON() })
         ]

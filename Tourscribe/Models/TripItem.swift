@@ -5,24 +5,37 @@ import Foundation
 struct FlightMetadata: Codable, Hashable {
     let airline: String?
     let flightNumber: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case airline
+        case flightNumber = "flight_number"
+    }
 }
 
 struct AccommodationMetadata: Codable, Hashable {
     let checkIn: String?
     let checkOut: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case checkIn = "check_in"
+        case checkOut = "check_out"
+    }
 }
 
 struct ActivityMetadata: Codable, Hashable {
-    let description: String?
 }
 
 struct RestaurantMetadata: Codable, Hashable {
-    let cuisine: String?
 }
 
 struct TransportMetadata: Codable, Hashable {
     let carrier: String?
     let vehicleNumber: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case carrier
+        case vehicleNumber = "vehicle_number"
+    }
 }
 
 enum TripItemMetadata: Hashable {
@@ -40,8 +53,8 @@ struct TripItem: Identifiable, Codable, Hashable {
     let tripId: Int64
     var name: String
     var itemType: TripItemType
-    var startTime: Date?
-    var endTime: Date?
+    var startDateTime: Date
+    var endDateTime: Date
     var metadata: TripItemMetadata?
     let createdAt: Date
     var updatedAt: Date?
@@ -51,8 +64,8 @@ struct TripItem: Identifiable, Codable, Hashable {
         case id, name, metadata
         case tripId = "trip_id"
         case itemType = "item_type"
-        case startTime = "start_time"
-        case endTime = "end_time"
+        case startDateTime = "start_datetime"
+        case endDateTime = "end_datetime"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case tripItemLocations = "trip_item_locations"
@@ -64,8 +77,8 @@ struct TripItem: Identifiable, Codable, Hashable {
         tripId = try container.decode(Int64.self, forKey: .tripId)
         name = try container.decode(String.self, forKey: .name)
         itemType = try container.decode(TripItemType.self, forKey: .itemType)
-        startTime = try container.decodeIfPresent(Date.self, forKey: .startTime)
-        endTime = try container.decodeIfPresent(Date.self, forKey: .endTime)
+        startDateTime = try container.decode(Date.self, forKey: .startDateTime)
+        endDateTime = try container.decode(Date.self, forKey: .endDateTime)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
         
@@ -101,8 +114,8 @@ struct TripItem: Identifiable, Codable, Hashable {
         try container.encode(tripId, forKey: .tripId)
         try container.encode(name, forKey: .name)
         try container.encode(itemType, forKey: .itemType)
-        try container.encodeIfPresent(startTime, forKey: .startTime)
-        try container.encodeIfPresent(endTime, forKey: .endTime)
+        try container.encode(startDateTime, forKey: .startDateTime)
+        try container.encode(endDateTime, forKey: .endDateTime)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
         

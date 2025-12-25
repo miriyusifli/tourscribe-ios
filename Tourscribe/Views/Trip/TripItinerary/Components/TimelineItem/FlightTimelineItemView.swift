@@ -22,11 +22,9 @@ struct FlightTimelineItemView: View {
             HStack(spacing: StyleGuide.Spacing.standard) {
                 // Departure
                 VStack(spacing: StyleGuide.Spacing.small) {
-                    if let start = item.startTime {
-                        Text(DateFormatters.shortTime.string(from: start))
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(.primary)
-                    }
+                    Text(DateFormatters.shortTime.string(from: item.startDateTime))
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.primary)
                     Text(dep.name)
                         .font(.subheadline)
                         .foregroundStyle(.primary)
@@ -68,11 +66,9 @@ struct FlightTimelineItemView: View {
                 
                 // Arrival
                 VStack(spacing: StyleGuide.Spacing.small) {
-                    if let end = item.endTime {
-                        Text(DateFormatters.shortTime.string(from: end))
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(.primary)
-                    }
+                    Text(DateFormatters.shortTime.string(from: item.endDateTime))
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.primary)
                     Text(arr.name)
                         .font(.subheadline)
                         .foregroundStyle(.primary)

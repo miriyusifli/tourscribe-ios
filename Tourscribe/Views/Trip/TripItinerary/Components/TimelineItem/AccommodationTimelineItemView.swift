@@ -16,8 +16,8 @@ struct AccommodationTimelineItemView: View {
         self.onDelete = onDelete
         
         let calendar = Calendar.current
-        self.isCheckInDay = displayDate.map { calendar.isDate($0, inSameDayAs: item.startTime ?? $0) } ?? true
-        self.isCheckOutDay = displayDate.map { calendar.isDate($0, inSameDayAs: item.endTime ?? $0) } ?? true
+        self.isCheckInDay = displayDate.map { calendar.isDate($0, inSameDayAs: item.startDateTime) } ?? true
+        self.isCheckOutDay = displayDate.map { calendar.isDate($0, inSameDayAs: item.endDateTime) } ?? true
     }
     
     var body: some View {
@@ -32,18 +32,18 @@ struct AccommodationTimelineItemView: View {
     @ViewBuilder
     private var checkInOutSection: some View {
         HStack(spacing: 0) {
-            if isCheckInDay, let checkIn = item.startTime {
-                timeColumn(icon: "door.left.hand.open", color: .green, time: checkIn, label: "label.check_in")
+            if isCheckInDay {
+                timeColumn(icon: "door.left.hand.open", color: .green, time: item.startDateTime, label: "label.check_in")
             }
             
-            if isCheckInDay && isCheckOutDay && item.startTime != nil && item.endTime != nil {
+            if isCheckInDay && isCheckOutDay {
                 Rectangle()
                     .fill(Color(.separator))
                     .frame(width: StyleGuide.Dimensions.dividerWidth, height: StyleGuide.Dimensions.dividerHeight)
             }
             
-            if isCheckOutDay, let checkOut = item.endTime {
-                timeColumn(icon: "door.right.hand.open", color: .red, time: checkOut, label: "label.check_out")
+            if isCheckOutDay {
+                timeColumn(icon: "door.right.hand.open", color: .red, time: item.endDateTime, label: "label.check_out")
             }
         }
         .padding(StyleGuide.Padding.standard)

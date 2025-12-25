@@ -29,22 +29,19 @@ class TripItemViewModel {
         var grouped: [Date: [TripItem]] = [:]
         
         for item in tripItems {
-            guard let startTime = item.startTime else { continue }
-            let startDay = calendar.startOfDay(for: startTime)
+            let startDay = calendar.startOfDay(for: item.startDateTime)
             grouped[startDay, default: []].append(item)
             
             // For accommodations, also add to check-out day
-            if item.itemType == .accommodation, let endTime = item.endTime {
-                let endDay = calendar.startOfDay(for: endTime)
+            if item.itemType == .accommodation {
+                let endDay = calendar.startOfDay(for: item.endDateTime)
                 if endDay != startDay {
                     grouped[endDay, default: []].append(item)
                 }
             }
         }
         
-        return grouped.sorted { $0.key < $1.key }.map { date, items in
-            (date: date, items: items.sorted { ($0.startTime ?? .distantPast) < ($1.startTime ?? .distantPast) })
-        }
+        return grouped.sorted { $0.key < $1.key }.map { ($0.key, $0.value) }
     }
     
     /// Returns the active accommodation for a given date (staying overnight, not check-in or check-out day)
@@ -52,12 +49,10 @@ class TripItemViewModel {
         let dayStart = calendar.startOfDay(for: date)
         
         return tripItems.first { item in
-            guard item.itemType == .accommodation,
-                  let checkIn = item.startTime,
-                  let checkOut = item.endTime else { return false }
+            guard item.itemType == .accommodation else { return false }
             
-            let checkInDay = calendar.startOfDay(for: checkIn)
-            let checkOutDay = calendar.startOfDay(for: checkOut)
+            let checkInDay = calendar.startOfDay(for: item.startDateTime)
+            let checkOutDay = calendar.startOfDay(for: item.endDateTime)
             
             // Show on days after check-in but before check-out (not on check-in/check-out days)
             return dayStart > checkInDay && dayStart < checkOutDay
@@ -74,6 +69,11 @@ class TripItemViewModel {
         }
         isLoading = false
     }
+    
+    func addItem(_ item: TripItem) {
+        let index = tripItems.firstIndex { $0.startDateTime > item.startDateTime } ?? tripItems.endIndex
+        tripItems.insert(item, at: index)
+    }
 
     func updateTripItem(item: TripItem) async {
         guard let index = tripItems.firstIndex(where: { $0.id == item.id }) else { return }
@@ -81,8 +81,8 @@ class TripItemViewModel {
         let request = TripItemUpdateRequest(
             name: item.name,
             itemType: item.itemType,
-            startTime: item.startTime,
-            endTime: item.endTime,
+            startDateTime: item.startDateTime,
+            endDateTime: item.endDateTime,
             metadata: item.metadata
         )
         

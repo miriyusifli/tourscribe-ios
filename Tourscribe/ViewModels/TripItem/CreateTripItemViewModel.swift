@@ -9,8 +9,8 @@ class CreateTripItemViewModel {
     // Form state
     var name = ""
     var selectedItemType: TripItemType = .activity
-    var startTime = Date()
-    var endTime = Date()
+    var startDateTime = Date()
+    var endDateTime = Date()
     
     // Single location (for accommodation, restaurant, activity)
     var location: Location? = nil
@@ -24,8 +24,6 @@ class CreateTripItemViewModel {
     var flightNumber: String?
     var checkIn: String?
     var checkOut: String?
-    var activityDescription: String?
-    var cuisine: String?
     var carrier: String?
     var vehicleNumber: String?
     
@@ -37,7 +35,7 @@ class CreateTripItemViewModel {
     init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService()) {
         self.tripId = tripId
         self.tripItemService = tripItemService
-        self.endTime = Calendar.current.date(byAdding: .hour, value: 1, to: self.startTime) ?? self.startTime
+        self.endDateTime = Calendar.current.date(byAdding: .hour, value: 1, to: self.startDateTime) ?? self.startDateTime
     }
     
     func createTripItem() async {
@@ -72,8 +70,8 @@ class CreateTripItemViewModel {
             tripId: tripId,
             name: name,
             itemType: selectedItemType,
-            startTime: startTime,
-            endTime: endTime,
+            startDateTime: startDateTime,
+            endDateTime: endDateTime,
             metadata: metadata
         )
         
@@ -92,9 +90,9 @@ class CreateTripItemViewModel {
         case .accommodation:
             return .accommodation(AccommodationMetadata(checkIn: checkIn, checkOut: checkOut))
         case .activity:
-            return .activity(ActivityMetadata(description: activityDescription))
+            return .activity(ActivityMetadata())
         case .restaurant:
-            return .restaurant(RestaurantMetadata(cuisine: cuisine))
+            return .restaurant(RestaurantMetadata())
         case .transport:
             return .transport(TransportMetadata(carrier: carrier, vehicleNumber: vehicleNumber))
         }
