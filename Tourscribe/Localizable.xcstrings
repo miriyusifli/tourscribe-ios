@@ -179,6 +179,54 @@
         }
       }
     },
+    "button.go_to" : {
+      "comment" : "A button label to navigate to a location.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go To"
+          }
+        }
+      }
+    },
+    "label.time_not_set" : {
+      "comment" : "Placeholder when time is not set for an item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time not set"
+          }
+        }
+      }
+    },
+    "label.check_in" : {
+      "comment" : "Label for accommodation check-in time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-in"
+          }
+        }
+      }
+    },
+    "label.check_out" : {
+      "comment" : "Label for accommodation check-out time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-out"
+          }
+        }
+      }
+    },
     "button.edit" : {
       "comment" : "A text label for an \"Edit\" button.",
       "extractionState" : "manual",
@@ -1520,6 +1568,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Please enter a trip name"
+          }
+        }
+      }
+    },
+    "label.staying_at %@" : {
+      "comment" : "Banner text showing current accommodation. %@ is the hotel/accommodation name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Staying at %@"
+          }
+        }
+      }
+    },
+    "label.today" : {
+      "comment" : "Badge label indicating the current day in the itinerary.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
           }
         }
       }

@@ -12,4 +12,6 @@ extension Color {
     static let backgroundBottom = Color(red: 0.85, green: 0.95, blue: 0.98)
     
     static let background = backgroundTop
+    
+    static let lightGray = Color(red: 0.96, green: 0.96, blue: 0.97)
 }

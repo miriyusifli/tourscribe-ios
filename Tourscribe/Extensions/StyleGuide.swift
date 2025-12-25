@@ -10,6 +10,7 @@ enum StyleGuide {
         static let large: CGFloat = 16
         static let xlarge: CGFloat = 20
         static let xxlarge: CGFloat = 24
+        static let routePath: CGFloat = 4
     }
     
     enum Padding {
@@ -44,5 +45,10 @@ enum StyleGuide {
 
     enum Dimensions {
         static let standardControlHeight: CGFloat = 42
+        static let dividerHeight: CGFloat = 40
+        static let dividerWidth: CGFloat = 1
+        static let borderWidth: CGFloat = 1
+        static let routeDotSize: CGFloat = 8
+        static let routeLineHeight: CGFloat = 2
     }
 }

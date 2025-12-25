@@ -43,7 +43,7 @@ struct TripItineraryView: View {
         }
         .task { if !viewModel.isPreview { await viewModel.fetchTripItems() } }
         .alert(item: $viewModel.alert) { alert in
-            Alert(title: Text(alert.title), message: Text(alert.message), dismissButton: .default(Text("OK")))
+            Alert(title: Text(alert.title), message: Text(alert.message), dismissButton: .default(Text(String(localized: "button.ok"))))
         }
         .sheet(isPresented: $viewModel.isShowingCreateSheet) { 
             NavigationStack {
@@ -58,21 +58,16 @@ struct TripItineraryView: View {
     @ViewBuilder
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: StyleGuide.Spacing.medium) {
-            HStack {
-                Text(trip.name)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundColor(.textPrimary)
-                Spacer()
-            }
+            Text(trip.name)
+                .font(StyleGuide.Typography.largeTitle)
+                .foregroundStyle(Color.textPrimary)
             
-            HStack {
-                Image(systemName: "calendar")
-                Text(tripDates)
-                    .foregroundColor(.textSecondary)
-            }
-            .font(.subheadline)
+            Label(tripDates, systemImage: "calendar")
+                .font(.subheadline)
+                .foregroundStyle(Color.textSecondary)
         }
-        .padding(.top, StyleGuide.Padding.xxlarge) // Adjusted for visual top spacing
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, StyleGuide.Padding.xxlarge)
     }
     
     @ViewBuilder
@@ -89,9 +84,25 @@ struct TripItineraryView: View {
     
     @ViewBuilder
     private var timelineSection: some View {
-        LazyVStack(spacing: StyleGuide.Spacing.large) {
-            ForEach(viewModel.tripItems) { item in
-                TimelineItemView(item: item, onEdit: {
+        LazyVStack(spacing: StyleGuide.Spacing.xxlarge) {
+            ForEach(viewModel.itemsByDate, id: \.date) { dayGroup in
+                daySectionView(date: dayGroup.date, items: dayGroup.items)
+            }
+        }
+        .padding(.top, StyleGuide.Padding.standard)
+    }
+    
+    @ViewBuilder
+    private func daySectionView(date: Date, items: [TripItem]) -> some View {
+        VStack(alignment: .leading, spacing: StyleGuide.Spacing.large) {
+            DaySectionHeaderView(date: date)
+            
+            if let activeAccommodation = viewModel.activeAccommodation(for: date) {
+                ActiveAccommodationBanner(name: activeAccommodation.name)
+            }
+            
+            ForEach(items) { item in
+                TimelineItemView(item: item, displayDate: date, onEdit: {
                     // TODO: Show edit view for item
                 }, onDelete: {
                     Task {
@@ -100,26 +111,22 @@ struct TripItineraryView: View {
                 })
             }
         }
-        .padding(.top, StyleGuide.Padding.standard)
     }
     
     @ViewBuilder
     private var addButton: some View {
-        HStack {
-            Spacer()
-            Button(action: { viewModel.isShowingCreateSheet = true }) {
-                Image(systemName: "plus")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(width: 60, height: 60)
-                    .background(Color.primaryColor)
-                    .clipShape(Circle())
-                    .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
-            }
-            .padding(.trailing, StyleGuide.Padding.large)
-            .padding(.bottom, StyleGuide.Padding.large)
+        Button(action: { viewModel.isShowingCreateSheet = true }) {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 60, height: 60)
+                .background(Color.primaryColor)
+                .clipShape(Circle())
+                .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.trailing, StyleGuide.Padding.large)
+        .padding(.bottom, StyleGuide.Padding.large)
     }
 }
 

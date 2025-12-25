@@ -18,4 +18,16 @@ enum DateFormatters {
         formatter.timeStyle = .short
         return formatter
     }()
+    
+    static let dayOfWeek: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return formatter
+    }()
+    
+    static let shortDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
 }

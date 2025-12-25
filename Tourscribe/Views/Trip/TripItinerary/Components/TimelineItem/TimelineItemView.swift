@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TimelineItemView: View {
     let item: TripItem
+    var displayDate: Date? = nil
     var onEdit: () -> Void
     var onDelete: () -> Void
     
@@ -11,7 +12,7 @@ struct TimelineItemView: View {
             case .flight:
                 FlightTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete)
             case .accommodation:
-                AccommodationTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete)
+                AccommodationTimelineItemView(item: item, displayDate: displayDate, onEdit: onEdit, onDelete: onDelete)
             case .activity:
                 ActivityTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete)
             case .restaurant:
