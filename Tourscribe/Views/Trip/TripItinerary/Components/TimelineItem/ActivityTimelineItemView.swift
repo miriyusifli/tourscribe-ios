@@ -16,8 +16,7 @@ struct ActivityTimelineItemView: View {
     
     @ViewBuilder
     private var metadataView: some View {
-        if case .activity(let data) = item.metadata, let desc = data.description {
-            MetadataRowView(icon: "info.circle", text: desc)
-        }
+        // TODO: Add activity-specific metadata display when ActivityMetadata properties are defined
+        EmptyView()
     }
 }
