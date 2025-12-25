@@ -16,6 +16,17 @@ class TripItemViewModel {
         self.tripItemService = tripItemService
     }
     
+    init(tripId: Int64, previewItems: [TripItem]) {
+        self.tripId = tripId
+        self.tripItemService = TripItemService()
+        self.tripItems = previewItems
+        self.isLoading = false
+    }
+    
+    var isPreview: Bool {
+        !tripItems.isEmpty && !isLoading
+    }
+    
     func fetchTripItems() async {
         isLoading = true
         do {

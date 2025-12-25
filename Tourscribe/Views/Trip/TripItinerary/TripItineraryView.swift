@@ -12,6 +12,11 @@ struct TripItineraryView: View {
         self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id))
     }
     
+    init(trip: Trip, previewItems: [TripItem]) {
+        self.trip = trip
+        self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id, previewItems: previewItems))
+    }
+    
     private var tripDates: String {
         guard let startDate = trip.startDate, let endDate = trip.endDate else { return "N/A" }
         return "\(DateFormatters.mediumStyle.string(from: startDate)) - \(DateFormatters.mediumStyle.string(from: endDate))"
@@ -36,7 +41,7 @@ struct TripItineraryView: View {
                 addButton
             }
         }
-        .task { await viewModel.fetchTripItems() }
+        .task { if !viewModel.isPreview { await viewModel.fetchTripItems() } }
         .alert(item: $viewModel.alert) { alert in
             Alert(title: Text(alert.title), message: Text(alert.message), dismissButton: .default(Text("OK")))
         }
@@ -84,7 +89,7 @@ struct TripItineraryView: View {
     
     @ViewBuilder
     private var timelineSection: some View {
-        LazyVStack(spacing: 0) {
+        LazyVStack(spacing: StyleGuide.Spacing.large) {
             ForEach(viewModel.tripItems) { item in
                 TimelineItemView(item: item, onEdit: {
                     // TODO: Show edit view for item
@@ -120,9 +125,99 @@ struct TripItineraryView: View {
 
 // MARK: - Preview
 
-struct TripItineraryView_Previews: PreviewProvider {
-    static var previews: some View {
-        let previewTrip = Trip(id: 1, userId: UUID(), name: "Trip to Tokyo", startDate: Date(), endDate: Date().addingTimeInterval(86400 * 7), createdAt: Date(), updatedAt: nil)
-        TripItineraryView(trip: previewTrip)
-    }
+#Preview {
+    let previewItems: [TripItem] = {
+        let json = """
+        [
+            {
+                "id": 1,
+                "trip_id": 30,
+                "name": "Flight to Munich",
+                "item_type": "flight",
+                "start_time": "2025-12-24T08:00:00Z",
+                "end_time": "2025-12-24T10:30:00Z",
+                "metadata": {"airline": "Lufthansa", "flight_number": "LH123"},
+                "created_at": "2025-12-24T16:44:36Z",
+                "updated_at": null,
+                "trip_item_locations": [
+                    {"id": 1, "trip_item_id": 1, "sequence": 0, "name": "JFK International", "address": "New York, USA", "latitude": 40.6413, "longitude": -73.7781},
+                    {"id": 2, "trip_item_id": 1, "sequence": 1, "name": "Munich Airport", "address": "Munich, Germany", "latitude": 48.3537, "longitude": 11.7750}
+                ]
+            },
+            {
+                "id": 2,
+                "trip_id": 30,
+                "name": "Hotel Bayerischer Hof",
+                "item_type": "accommodation",
+                "start_time": "2025-12-24T14:00:00Z",
+                "end_time": "2025-12-28T11:00:00Z",
+                "metadata": {"check_in": "14:00", "check_out": "11:00"},
+                "created_at": "2025-12-24T16:44:36Z",
+                "updated_at": null,
+                "trip_item_locations": [
+                    {"id": 3, "trip_item_id": 2, "sequence": 0, "name": "Hotel Bayerischer Hof", "address": "Promenadeplatz 2-6, 80333 Munich", "latitude": 48.1397, "longitude": 11.5735}
+                ]
+            },
+            {
+                "id": 3,
+                "trip_id": 30,
+                "name": "Visit Marienplatz",
+                "item_type": "activity",
+                "start_time": "2025-12-24T16:00:00Z",
+                "end_time": "2025-12-24T18:00:00Z",
+                "metadata": {"description": "Explore the famous square and watch the Glockenspiel"},
+                "created_at": "2025-12-24T16:44:36Z",
+                "updated_at": null,
+                "trip_item_locations": [
+                    {"id": 4, "trip_item_id": 3, "sequence": 0, "name": "Marienplatz", "address": "Marienplatz, 80331 Munich", "latitude": 48.1374, "longitude": 11.5755}
+                ]
+            },
+            {
+                "id": 4,
+                "trip_id": 30,
+                "name": "Dinner at Hofbräuhaus",
+                "item_type": "restaurant",
+                "start_time": "2025-12-24T19:00:00Z",
+                "end_time": "2025-12-24T21:00:00Z",
+                "metadata": {"cuisine": "Traditional Bavarian"},
+                "created_at": "2025-12-24T16:44:36Z",
+                "updated_at": null,
+                "trip_item_locations": [
+                    {"id": 5, "trip_item_id": 4, "sequence": 0, "name": "Hofbräuhaus", "address": "Platzl 9, 80331 Munich", "latitude": 48.1376, "longitude": 11.5799}
+                ]
+            },
+            {
+                "id": 5,
+                "trip_id": 30,
+                "name": "Train to Neuschwanstein",
+                "item_type": "transport",
+                "start_time": "2025-12-25T09:00:00Z",
+                "end_time": "2025-12-25T11:00:00Z",
+                "metadata": {"carrier": "Deutsche Bahn", "vehicle_number": "RE 57432"},
+                "created_at": "2025-12-24T16:44:36Z",
+                "updated_at": null,
+                "trip_item_locations": [
+                    {"id": 6, "trip_item_id": 5, "sequence": 0, "name": "Munich Hauptbahnhof", "address": "Munich Central Station", "latitude": 48.1403, "longitude": 11.5600},
+                    {"id": 7, "trip_item_id": 5, "sequence": 1, "name": "Füssen Station", "address": "Füssen, Germany", "latitude": 47.5692, "longitude": 10.7008}
+                ]
+            }
+        ]
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try! decoder.decode([TripItem].self, from: json.data(using: .utf8)!)
+    }()
+    
+    TripItineraryView(
+        trip: Trip(
+            id: 30,
+            userId: UUID(),
+            name: "Germany Trip",
+            startDate: Date(),
+            endDate: Date().addingTimeInterval(86400 * 7),
+            createdAt: Date(),
+            updatedAt: nil
+        ),
+        previewItems: previewItems
+    )
 }
