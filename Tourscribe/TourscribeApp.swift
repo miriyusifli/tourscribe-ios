@@ -6,23 +6,26 @@ struct TourscribeApp: App {
     
     var body: some Scene {
         WindowGroup {
-            if appViewModel.isLoading {
-                LoadingView()
-            } else {
-                if appViewModel.isLoggedIn {
-                    MyTrips()
-                        .transition(.opacity)
+            Group {
+                if appViewModel.isLoading {
+                    LoadingView()
                 } else {
-                    NavigationStack {
-                        SignInView {
-                            withAnimation {
-                                appViewModel.isLoggedIn = true
+                    if appViewModel.isLoggedIn {
+                        MyTrips()
+                            .transition(.opacity)
+                    } else {
+                        NavigationStack {
+                            SignInView {
+                                withAnimation {
+                                    appViewModel.isLoggedIn = true
+                                }
                             }
                         }
+                        .transition(.opacity)
                     }
-                    .transition(.opacity)
                 }
             }
+            .preferredColorScheme(.light)
         }
     }
 }

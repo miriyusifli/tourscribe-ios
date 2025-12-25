@@ -75,8 +75,10 @@ struct TripItineraryView: View {
             HeaderButton(icon: "sparkles", title: String(localized:"button.recommendations"), iconColor: .yellow) {
                 // TODO: Recommendations Action
             }
-            HeaderButton(icon: "map.fill", title: String(localized:"button.map_view"), iconColor: .green) {
-                // TODO: Map View Action
+            NavigationLink {
+                TripMapView(tripItems: viewModel.tripItems, tripName: trip.name)
+            } label: {
+                HeaderButtonLabel(icon: "map.fill", title: String(localized:"button.map_view"), iconColor: .green)
             }
         }
     }

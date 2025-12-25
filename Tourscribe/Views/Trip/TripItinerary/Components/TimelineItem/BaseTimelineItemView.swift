@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 struct BaseTimelineItemView<Content: View>: View {
     let item: TripItem
@@ -94,22 +95,29 @@ struct BaseTimelineItemView<Content: View>: View {
     
     @ViewBuilder
     private var goToButton: some View {
-        HStack {
-            Spacer()
-            Button {
-                // TODO: Open directions
-            } label: {
-                Label(String(localized: "button.go_to"), systemImage: "arrow.triangle.turn.up.right.circle.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, StyleGuide.Padding.medium)
-                    .padding(.vertical, StyleGuide.Padding.small)
-                    .background(Color.primaryColor)
-                    .clipShape(Capsule())
+        if let location = item.location {
+            HStack {
+                Spacer()
+                Button {
+                    let destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(
+                        latitude: location.latitude,
+                        longitude: location.longitude
+                    )))
+                    destination.name = location.name
+                    destination.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+                } label: {
+                    Label(String(localized: "button.go_to"), systemImage: "arrow.triangle.turn.up.right.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, StyleGuide.Padding.medium)
+                        .padding(.vertical, StyleGuide.Padding.small)
+                        .background(Color.primaryColor)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            .transition(.scale.combined(with: .opacity))
         }
-        .transition(.scale.combined(with: .opacity))
     }
 }
 
