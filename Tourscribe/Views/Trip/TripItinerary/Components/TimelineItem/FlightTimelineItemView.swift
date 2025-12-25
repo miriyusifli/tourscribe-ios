@@ -5,9 +5,11 @@ struct FlightTimelineItemView: View {
     var onEdit: () -> Void
     var onDelete: () -> Void
     
-    private var flightData: FlightMetadata? {
-        if case .flight(let data) = item.metadata { return data }
-        return nil
+    private var flightData: FlightMetadata {
+        guard case .flight(let data) = item.metadata else {
+            fatalError("FlightTimelineItemView requires flight metadata")
+        }
+        return data
     }
     
     var body: some View {
@@ -35,11 +37,9 @@ struct FlightTimelineItemView: View {
                 
                 // Flight path with flight number
                 VStack(spacing: StyleGuide.Spacing.small) {
-                    if let flightNumber = flightData?.flightNumber {
-                        Text(flightNumber)
-                            .font(.caption.weight(.bold).monospaced())
-                            .foregroundStyle(item.itemType.color)
-                    }
+                    Text(flightData.flightNumber)
+                        .font(.caption.weight(.bold).monospaced())
+                        .foregroundStyle(item.itemType.color)
                     
                     HStack(spacing: StyleGuide.Spacing.routePath) {
                         Circle()

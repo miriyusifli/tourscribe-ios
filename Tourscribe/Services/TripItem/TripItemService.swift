@@ -15,8 +15,8 @@ class TripItemService: TripItemServiceProtocol {
         return try JSONDecoders.iso8601.decode([TripItem].self, from: response.data)
     }
 
-    func createTripItem(item: TripItemCreateRequest, locations: [Location]) async throws -> TripItem {
-        let params = item.toRPCParams(locations: locations)
+    func createTripItem(request: TripItemCreateRequest) async throws -> TripItem {
+        let params = request.toRPCParams()
         let response = try await client.rpc("create_trip_item", params: params).execute()
         return try JSONDecoders.iso8601.decode(TripItem.self, from: response.data)
     }

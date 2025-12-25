@@ -20,12 +20,10 @@ class CreateTripItemViewModel {
     var arrivalLocation: Location? = nil
     
     // Metadata properties
-    var airline: String?
-    var flightNumber: String?
-    var checkIn: String?
-    var checkOut: String?
-    var carrier: String?
-    var vehicleNumber: String?
+    var airline = ""
+    var flightNumber = ""
+    var carrier = ""
+    var vehicleNumber = ""
     
     // UI State
     var isLoading = false
@@ -40,45 +38,39 @@ class CreateTripItemViewModel {
     
     func createTripItem() async {
         errorMessage = nil
-        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = String(localized: "error.trip_item.name_required")
-            return
-        }
 
-        // Validate locations based on type
+        // Build locations array
         let locations: [Location]
         if selectedItemType.isMultiLocation {
-            guard let departure = departureLocation, let arrival = arrivalLocation else {
-                errorMessage = String(localized: "error.trip_item.locations_required")
-                return
-            }
-            locations = [departure.withSequence(0), arrival.withSequence(1)]
+            locations = [departureLocation, arrivalLocation]
+                .compactMap { $0 }
+                .enumerated()
+                .map { $0.element.withSequence($0.offset) }
         } else {
-            guard let loc = location else {
-                errorMessage = String(localized: "error.trip_item.location_required")
-                return
-            }
-            locations = [loc.withSequence(0)]
+            locations = [location].compactMap { $0?.withSequence(0) }
         }
 
         isLoading = true
         defer { isLoading = false }
         
-        let metadata = buildMetadata()
-        
-        let request = TripItemCreateRequest(
-            tripId: tripId,
-            name: name,
-            itemType: selectedItemType,
-            startDateTime: startDateTime,
-            endDateTime: endDateTime,
-            metadata: metadata
-        )
-        
         do {
-            let newItem = try await tripItemService.createTripItem(item: request, locations: locations)
+            let tripItem = try TripItem(
+                tripId: tripId,
+                name: name,
+                itemType: selectedItemType,
+                startDateTime: startDateTime,
+                endDateTime: endDateTime,
+                metadata: buildMetadata(),
+                locations: locations
+            )
+            
+            let request = TripItemCreateRequest(tripItem: tripItem)
+            let newItem = try await tripItemService.createTripItem(request: request)
             self.createdItem = newItem
+        } catch let error as TripItemValidationError {
+            self.errorMessage = error.localizedDescription
         } catch {
+            print(error)
             self.errorMessage = String(localized: "error.generic.unknown")
         }
     }
@@ -88,7 +80,7 @@ class CreateTripItemViewModel {
         case .flight:
             return .flight(FlightMetadata(airline: airline, flightNumber: flightNumber))
         case .accommodation:
-            return .accommodation(AccommodationMetadata(checkIn: checkIn, checkOut: checkOut))
+            return .accommodation(AccommodationMetadata())
         case .activity:
             return .activity(ActivityMetadata())
         case .restaurant:

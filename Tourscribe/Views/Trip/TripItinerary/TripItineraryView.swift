@@ -97,7 +97,7 @@ struct TripItineraryView: View {
             DaySectionHeaderView(date: date)
             
             if let activeAccommodation = viewModel.activeAccommodation(for: date) {
-                ActiveAccommodationBanner(name: activeAccommodation.name)
+                ActiveAccommodationBanner(name: activeAccommodation.location?.name ?? activeAccommodation.name)
             }
             
             ForEach(items) { item in

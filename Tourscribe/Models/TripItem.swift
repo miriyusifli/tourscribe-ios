@@ -3,8 +3,8 @@ import Foundation
 // MARK: - Metadata Models
 
 struct FlightMetadata: Codable, Hashable {
-    let airline: String?
-    let flightNumber: String?
+    let airline: String
+    let flightNumber: String
     
     enum CodingKeys: String, CodingKey {
         case airline
@@ -13,13 +13,6 @@ struct FlightMetadata: Codable, Hashable {
 }
 
 struct AccommodationMetadata: Codable, Hashable {
-    let checkIn: String?
-    let checkOut: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case checkIn = "check_in"
-        case checkOut = "check_out"
-    }
 }
 
 struct ActivityMetadata: Codable, Hashable {
@@ -29,8 +22,8 @@ struct RestaurantMetadata: Codable, Hashable {
 }
 
 struct TransportMetadata: Codable, Hashable {
-    let carrier: String?
-    let vehicleNumber: String?
+    let carrier: String
+    let vehicleNumber: String
     
     enum CodingKeys: String, CodingKey {
         case carrier
@@ -55,7 +48,7 @@ struct TripItem: Identifiable, Codable, Hashable {
     var itemType: TripItemType
     var startDateTime: Date
     var endDateTime: Date
-    var metadata: TripItemMetadata?
+    var metadata: TripItemMetadata
     let createdAt: Date
     var updatedAt: Date?
     var locations: [Location]
@@ -69,6 +62,62 @@ struct TripItem: Identifiable, Codable, Hashable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case tripItemLocations = "trip_item_locations"
+    }
+    
+    init(
+        id: Int64 = 0,
+        tripId: Int64,
+        name: String,
+        itemType: TripItemType,
+        startDateTime: Date,
+        endDateTime: Date,
+        metadata: TripItemMetadata,
+        createdAt: Date = Date(),
+        updatedAt: Date? = nil,
+        locations: [Location] = []
+    ) throws {
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TripItemValidationError.nameRequired
+        }
+        guard startDateTime <= endDateTime else {
+            throw TripItemValidationError.invalidDateRange
+        }
+        guard !locations.isEmpty else {
+            throw TripItemValidationError.locationRequired
+        }
+        if itemType == .flight && locations.count < 2 {
+            throw TripItemValidationError.flightLocationsRequired
+        }
+        try Self.validateMetadata(metadata, for: itemType)
+        self.id = id
+        self.tripId = tripId
+        self.name = name
+        self.itemType = itemType
+        self.startDateTime = startDateTime
+        self.endDateTime = endDateTime
+        self.metadata = metadata
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.locations = locations
+    }
+    
+    private static func validateMetadata(_ metadata: TripItemMetadata, for itemType: TripItemType) throws {
+        switch itemType {
+        case .flight:
+            guard case .flight(let data) = metadata,
+                  !data.airline.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !data.flightNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw TripItemValidationError.flightMetadataRequired
+            }
+        case .transport:
+            guard case .transport(let data) = metadata,
+                  !data.carrier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !data.vehicleNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw TripItemValidationError.transportMetadataRequired
+            }
+        case .accommodation, .activity, .restaurant:
+            break
+        }
     }
 
     init(from decoder: Decoder) throws {
@@ -90,21 +139,17 @@ struct TripItem: Identifiable, Codable, Hashable {
         }
         
         // Decode metadata based on itemType
-        if container.contains(.metadata) {
-            switch itemType {
-            case .flight:
-                metadata = .flight(try container.decode(FlightMetadata.self, forKey: .metadata))
-            case .accommodation:
-                metadata = .accommodation(try container.decode(AccommodationMetadata.self, forKey: .metadata))
-            case .activity:
-                metadata = .activity(try container.decode(ActivityMetadata.self, forKey: .metadata))
-            case .restaurant:
-                metadata = .restaurant(try container.decode(RestaurantMetadata.self, forKey: .metadata))
-            case .transport:
-                metadata = .transport(try container.decode(TransportMetadata.self, forKey: .metadata))
-            }
-        } else {
-            metadata = nil
+        switch itemType {
+        case .flight:
+            metadata = .flight(try container.decode(FlightMetadata.self, forKey: .metadata))
+        case .accommodation:
+            metadata = .accommodation(try container.decode(AccommodationMetadata.self, forKey: .metadata))
+        case .activity:
+            metadata = .activity(try container.decode(ActivityMetadata.self, forKey: .metadata))
+        case .restaurant:
+            metadata = .restaurant(try container.decode(RestaurantMetadata.self, forKey: .metadata))
+        case .transport:
+            metadata = .transport(try container.decode(TransportMetadata.self, forKey: .metadata))
         }
     }
 
@@ -130,8 +175,6 @@ struct TripItem: Identifiable, Codable, Hashable {
             try container.encode(data, forKey: .metadata)
         case .transport(let data):
             try container.encode(data, forKey: .metadata)
-        case .none:
-            break
         }
     }
 }

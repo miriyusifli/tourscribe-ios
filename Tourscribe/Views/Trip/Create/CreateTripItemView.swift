@@ -100,9 +100,17 @@ struct CreateTripItemView: View {
             
             locationSection
             
-            CustomDatePicker(title: String(localized: "trip_item.field.start_time"), selection: $viewModel.startDateTime, displayedComponents: [.date, .hourAndMinute])
+            CustomDatePicker(
+                title: String(localized: viewModel.selectedItemType == .accommodation ? "trip_item.field.check_in_time" : "trip_item.field.start_time"),
+                selection: $viewModel.startDateTime,
+                displayedComponents: [.date, .hourAndMinute]
+            )
             
-            CustomDatePicker(title: String(localized: "trip_item.field.end_time"), selection: $viewModel.endDateTime, displayedComponents: [.date, .hourAndMinute])
+            CustomDatePicker(
+                title: String(localized: viewModel.selectedItemType == .accommodation ? "trip_item.field.check_out_time" : "trip_item.field.end_time"),
+                selection: $viewModel.endDateTime,
+                displayedComponents: [.date, .hourAndMinute]
+            )
         }
     }
     
@@ -147,18 +155,17 @@ struct CreateTripItemView: View {
         VStack(spacing: StyleGuide.Spacing.large) {
             switch viewModel.selectedItemType {
             case .flight:
-                CustomTextField(placeholder: String(localized: "trip_item.field.airline"), text: Binding($viewModel.airline, replacingNilWith: ""))
-                CustomTextField(placeholder: String(localized: "trip_item.field.flight_number"), text: Binding($viewModel.flightNumber, replacingNilWith: ""))
+                CustomTextField(placeholder: String(localized: "trip_item.field.airline"), text: $viewModel.airline)
+                CustomTextField(placeholder: String(localized: "trip_item.field.flight_number"), text: $viewModel.flightNumber)
             case .accommodation:
-                CustomTextField(placeholder: String(localized: "trip_item.field.check_in"), text: Binding($viewModel.checkIn, replacingNilWith: ""))
-                CustomTextField(placeholder: String(localized: "trip_item.field.check_out"), text: Binding($viewModel.checkOut, replacingNilWith: ""))
+                EmptyView()
             case .activity:
                 EmptyView()
             case .restaurant:
                 EmptyView()
             case .transport:
-                CustomTextField(placeholder: String(localized: "trip_item.field.carrier"), text: Binding($viewModel.carrier, replacingNilWith: ""))
-                CustomTextField(placeholder: String(localized: "trip_item.field.vehicle_number"), text: Binding($viewModel.vehicleNumber, replacingNilWith: ""))
+                CustomTextField(placeholder: String(localized: "trip_item.field.carrier"), text: $viewModel.carrier)
+                CustomTextField(placeholder: String(localized: "trip_item.field.vehicle_number"), text: $viewModel.vehicleNumber)
             }
         }
     }

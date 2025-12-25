@@ -5,8 +5,8 @@ create or replace function create_trip_item(
   p_trip_id bigint,
   p_name text,
   p_item_type text,
-  p_start_time timestamptz,
-  p_end_time timestamptz,
+  p_start_datetime timestamptz,
+  p_end_datetime timestamptz,
   p_metadata jsonb,
   p_locations jsonb
 ) returns json
@@ -18,8 +18,8 @@ declare
   v_loc jsonb;
   v_result json;
 begin
-  insert into trip_items (trip_id, name, item_type, start_time, end_time, metadata)
-  values (p_trip_id, p_name, p_item_type, p_start_time, p_end_time, p_metadata)
+  insert into trip_items (trip_id, name, item_type, start_datetime, end_datetime, metadata)
+  values (p_trip_id, p_name, p_item_type, p_start_datetime, p_end_datetime, p_metadata)
   returning id into v_item_id;
   
   for v_loc in select * from jsonb_array_elements(p_locations)
@@ -40,8 +40,8 @@ begin
     'trip_id', ti.trip_id,
     'name', ti.name,
     'item_type', ti.item_type,
-    'start_time', ti.start_time,
-    'end_time', ti.end_time,
+    'start_datetime', ti.start_datetime,
+    'end_datetime', ti.end_datetime,
     'metadata', ti.metadata,
     'created_at', ti.created_at,
     'updated_at', ti.updated_at,
