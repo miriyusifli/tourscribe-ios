@@ -28,7 +28,10 @@ class TripItemService: TripItemServiceProtocol {
     }
 
     func deleteTripItem(itemId: Int64) async throws {
-        //TODO implement me
-        throw NSError(domain: "Not implemented", code: 0, userInfo: nil)
+        try await client
+            .from("trip_items")
+            .delete()
+            .eq("id", value: String(itemId))
+            .execute()
     }
 }
