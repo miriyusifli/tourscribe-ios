@@ -19,12 +19,19 @@ struct ProfileCreateRequest: Codable {
         case interests
     }
     
+    private static func isValidName(_ name: String) -> Bool {
+        name.allSatisfy { $0.isLetter }
+    }
+    
     init(id: String, email: String, firstName: String, lastName: String, birthDate: Date, gender: String, interests: [String]) throws {
         if firstName.trimmingCharacters(in: .whitespaces).isEmpty {
             throw ProfileValidationError.emptyFirstName
         }
         if lastName.trimmingCharacters(in: .whitespaces).isEmpty {
             throw ProfileValidationError.emptyLastName
+        }
+        if !Self.isValidName(firstName) || !Self.isValidName(lastName) {
+            throw ProfileValidationError.invalidNameFormat
         }
         if gender.trimmingCharacters(in: .whitespaces).isEmpty {
             throw ProfileValidationError.emptyGender

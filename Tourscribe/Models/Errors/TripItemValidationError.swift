@@ -2,6 +2,7 @@ import Foundation
 
 enum TripItemValidationError: LocalizedError {
     case nameRequired
+    case invalidNameFormat
     case invalidDateRange
     case locationRequired
     case flightLocationsRequired
@@ -12,6 +13,8 @@ enum TripItemValidationError: LocalizedError {
         switch self {
         case .nameRequired:
             return String(localized: "error.trip_item.name_required")
+        case .invalidNameFormat:
+            return String(localized: "error.trip_item.invalid_name_format")
         case .invalidDateRange:
             return String(localized: "error.trip_item.invalid_date_range")
         case .locationRequired:

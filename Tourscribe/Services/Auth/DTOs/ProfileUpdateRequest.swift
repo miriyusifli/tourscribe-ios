@@ -7,12 +7,19 @@ struct ProfileUpdateRequest {
     let birthDate: Date
     let gender: String
     
+    private static func isValidName(_ name: String) -> Bool {
+        name.allSatisfy { $0.isLetter }
+    }
+    
     init(firstName: String, lastName: String, birthDate: Date, gender: String) throws {
         if firstName.trimmingCharacters(in: .whitespaces).isEmpty {
             throw ProfileValidationError.emptyFirstName
         }
         if lastName.trimmingCharacters(in: .whitespaces).isEmpty {
             throw ProfileValidationError.emptyLastName
+        }
+        if !Self.isValidName(firstName) || !Self.isValidName(lastName) {
+            throw ProfileValidationError.invalidNameFormat
         }
         if gender.trimmingCharacters(in: .whitespaces).isEmpty {
             throw ProfileValidationError.emptyGender

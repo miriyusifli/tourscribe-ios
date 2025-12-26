@@ -5,7 +5,7 @@ class TripService: TripServiceProtocol {
     private let client = SupabaseClientManager.shared.client
     
     func createTrip(name: String, startDate: Date?, endDate: Date?) async throws -> Trip {
-        let request = TripCreateRequest(name: name, startDate: startDate, endDate: endDate)
+        let request = try TripCreateRequest(name: name, startDate: startDate, endDate: endDate)
         let response = try await client.rpc("create_trip", params: request.toRPCParams()).execute()
         return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
     }

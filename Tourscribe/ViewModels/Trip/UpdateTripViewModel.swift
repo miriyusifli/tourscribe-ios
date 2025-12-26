@@ -28,12 +28,14 @@ class UpdateTripViewModel {
         defer { isLoading = false }
         
         do {
-            let request = TripUpdateRequest(
+            let request = try TripUpdateRequest(
                 name: name,
                 startDate: startDate,
                 endDate: endDate
             )
             updatedTrip = try await tripService.updateTrip(tripId: originalTrip.id, request: request)
+        } catch let error as TripValidationError {
+            errorMessage = error.localizedDescription
         } catch {
             errorMessage = String(localized: "error.generic.unknown")
         }

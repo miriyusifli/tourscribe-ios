@@ -12,6 +12,10 @@ struct TripItemCreateRequest {
     let metadata: TripItemMetadata
     let locations: [Location]
     
+    private static func isValidName(_ name: String) -> Bool {
+        name.allSatisfy { $0.isLetter || $0.isNumber || $0.isWhitespace }
+    }
+    
     init(
         tripId: Int64,
         name: String,
@@ -23,6 +27,9 @@ struct TripItemCreateRequest {
     ) throws {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw TripItemValidationError.nameRequired
+        }
+        guard Self.isValidName(name) else {
+            throw TripItemValidationError.invalidNameFormat
         }
         guard startDateTime <= endDateTime else {
             throw TripItemValidationError.invalidDateRange

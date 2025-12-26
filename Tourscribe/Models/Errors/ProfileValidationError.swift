@@ -6,6 +6,7 @@ enum ProfileValidationError: LocalizedError {
     case emptyGender
     case underAge
     case insufficientInterests
+    case invalidNameFormat
     
     var errorDescription: String? {
         switch self {
@@ -19,6 +20,8 @@ enum ProfileValidationError: LocalizedError {
             return String(format: String(localized: "validation.age.minimum"), AppConfig.minimumSignupAge)
         case .insufficientInterests:
             return String(format: String(localized: "validation.interests.minimum"), AppConfig.minimumInterests)
+        case .invalidNameFormat:
+            return String(localized: "validation.name.invalid_format")
         }
     }
 }
