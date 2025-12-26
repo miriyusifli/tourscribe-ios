@@ -2,19 +2,24 @@ import SwiftUI
 
 struct TripListView: View {
     @ObservedObject var viewModel: MyTripsViewModel
+    @State private var editingTrip: Trip?
 
     var body: some View {
-        List {
+        ScrollView {
             listContent
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
         .refreshable {
             await viewModel.fetchTrips(for: viewModel.selectedSegment)
         }
         .safeAreaInset(edge: .bottom) {
             TripListAddButton(viewModel: viewModel)
+        }
+        .sheet(item: $editingTrip) { trip in
+            NavigationStack {
+                UpdateTripView(trip: trip) { updatedTrip in
+                    viewModel.updateTrip(updatedTrip)
+                }
+            }
         }
     }
 
@@ -34,35 +39,28 @@ struct TripListView: View {
     
     @ViewBuilder
     private var tripRows: some View {
-        ForEach(viewModel.trips) { trip in
-            ZStack {
-                TripCardView(trip: trip)
+        LazyVStack(spacing: StyleGuide.Spacing.standard) {
+            ForEach(viewModel.trips) { trip in
                 NavigationLink(value: trip) {
-                    EmptyView()
+                    TripCardView(trip: trip)
                 }
-                .opacity(0)
-            }
-            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button(role: .destructive) {
-                    Task {
-                        await viewModel.deleteTrip(tripId: String(trip.id))
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button {
+                        editingTrip = trip
+                    } label: {
+                        Label(String(localized: "button.edit"), systemImage: "pencil")
                     }
-                } label: {
-                    Label(String(localized: "button.delete", defaultValue: "Delete"), systemImage: "trash.fill")
+                    Button(role: .destructive) {
+                        Task {
+                            await viewModel.deleteTrip(tripId: String(trip.id))
+                        }
+                    } label: {
+                        Label(String(localized: "button.delete"), systemImage: "trash")
+                    }
                 }
-                .tint(.red)
-
-                Button {
-                    // TODO: Implement trip editing logic
-                    print("Edit trip: \(trip.name)")
-                } label: {
-                    Label(String(localized: "button.edit", defaultValue: "Edit"), systemImage: "pencil")
-                }
-                .tint(.blue)
             }
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: StyleGuide.Padding.standard, leading: StyleGuide.Padding.xlarge, bottom: StyleGuide.Padding.standard, trailing: StyleGuide.Padding.xlarge))
         }
+        .padding(.horizontal, StyleGuide.Padding.xlarge)
     }
 }

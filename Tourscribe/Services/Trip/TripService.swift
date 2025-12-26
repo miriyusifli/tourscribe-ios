@@ -40,8 +40,16 @@ class TripService: TripServiceProtocol {
         return try JSONDecoders.iso8601.decode([Trip].self, from: response.data)
     }
     
+    func updateTrip(tripId: Int64, request: TripUpdateRequest) async throws -> Trip {
+        let response = try await client.rpc("update_trip", params: request.toRPCParams(tripId: tripId)).execute()
+        return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
+    }
+    
     func deleteTrip(tripId: String) async throws {
-        //TODO implement me
-        throw NSError(domain: "Not implemented", code: 0, userInfo: nil)
+        try await client
+            .from("trips")
+            .delete()
+            .eq("id", value: tripId)
+            .execute()
     }
 }

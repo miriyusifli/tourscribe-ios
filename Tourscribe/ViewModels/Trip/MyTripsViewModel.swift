@@ -38,20 +38,21 @@ class MyTripsViewModel: ObservableObject {
     }
     
     func deleteTrip(tripId: String) async {
-        guard let id = Int64(tripId) else {
-            print("Invalid tripId format: \(tripId)")
-            return
-        }
-
+        guard let id = Int64(tripId),
+              let index = trips.firstIndex(where: { $0.id == id }) else { return }
+        
+        let deletedTrip = trips.remove(at: index)
+        
         do {
             try await tripService.deleteTrip(tripId: tripId)
         } catch {
-            // If the delete fails, fetch the trips again to revert the UI change
-            print("Error deleting trip: \(error.localizedDescription)")
+            trips.insert(deletedTrip, at: min(index, trips.count))
             alert = .error(String(localized: "error.trip.delete_failed"))
-            await fetchTrips(for: selectedSegment)
         }
-        
-        trips.removeAll { $0.id == id }
+    }
+    
+    func updateTrip(_ trip: Trip) {
+        guard let index = trips.firstIndex(where: { $0.id == trip.id }) else { return }
+        trips[index] = trip
     }
 }
