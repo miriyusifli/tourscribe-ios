@@ -4,65 +4,74 @@ import Supabase
 private let iso8601Formatter = ISO8601DateFormatter()
 
 struct TripItemCreateRequest {
-    let tripItem: TripItem
+    let tripId: Int64
+    let name: String
+    let itemType: TripItemType
+    let startDateTime: Date
+    let endDateTime: Date
+    let metadata: TripItemMetadata
+    let locations: [Location]
+    
+    init(
+        tripId: Int64,
+        name: String,
+        itemType: TripItemType,
+        startDateTime: Date,
+        endDateTime: Date,
+        metadata: TripItemMetadata,
+        locations: [Location]
+    ) throws {
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TripItemValidationError.nameRequired
+        }
+        guard startDateTime <= endDateTime else {
+            throw TripItemValidationError.invalidDateRange
+        }
+        guard !locations.isEmpty else {
+            throw TripItemValidationError.locationRequired
+        }
+        if itemType == .flight && locations.count < 2 {
+            throw TripItemValidationError.flightLocationsRequired
+        }
+        try Self.validateMetadata(metadata, for: itemType)
+        
+        self.tripId = tripId
+        self.name = name
+        self.itemType = itemType
+        self.startDateTime = startDateTime
+        self.endDateTime = endDateTime
+        self.metadata = metadata
+        self.locations = locations
+    }
+    
+    private static func validateMetadata(_ metadata: TripItemMetadata, for itemType: TripItemType) throws {
+        switch itemType {
+        case .flight:
+            guard case .flight(let data) = metadata,
+                  !data.airline.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !data.flightNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw TripItemValidationError.flightMetadataRequired
+            }
+        case .transport:
+            guard case .transport(let data) = metadata,
+                  !data.carrier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !data.vehicleNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw TripItemValidationError.transportMetadataRequired
+            }
+        case .accommodation, .activity, .restaurant:
+            break
+        }
+    }
     
     func toRPCParams() -> [String: AnyJSON] {
         [
-            "p_trip_id": .integer(Int(tripItem.tripId)),
-            "p_name": .string(tripItem.name),
-            "p_item_type": .string(tripItem.itemType.rawValue),
-            "p_start_datetime": .string(iso8601Formatter.string(from: tripItem.startDateTime)),
-            "p_end_datetime": .string(iso8601Formatter.string(from: tripItem.endDateTime)),
-            "p_metadata": tripItem.metadata.toAnyJSON(),
-            "p_locations": .array(tripItem.locations.map { $0.toAnyJSON() })
+            "p_trip_id": .integer(Int(tripId)),
+            "p_name": .string(name),
+            "p_item_type": .string(itemType.rawValue),
+            "p_start_datetime": .string(iso8601Formatter.string(from: startDateTime)),
+            "p_end_datetime": .string(iso8601Formatter.string(from: endDateTime)),
+            "p_metadata": metadata.toAnyJSON(),
+            "p_locations": .array(locations.map { $0.toAnyJSON() })
         ]
-    }
-}
-
-// MARK: - AnyJSON Helpers
-
-extension Location {
-    func toAnyJSON() -> AnyJSON {
-        var dict: [String: AnyJSON] = [
-            "sequence": .integer(sequence),
-            "name": .string(name),
-            "latitude": .double(latitude),
-            "longitude": .double(longitude)
-        ]
-        if let address = address {
-            dict["address"] = .string(address)
-        }
-        return .object(dict)
-    }
-}
-
-extension TripItemMetadata {
-    func toAnyJSON() -> AnyJSON {
-        let encoder = JSONEncoder()
-        let data: Data
-        
-        switch self {
-        case .flight(let m): data = (try? encoder.encode(m)) ?? Data()
-        case .accommodation(let m): data = (try? encoder.encode(m)) ?? Data()
-        case .activity(let m): data = (try? encoder.encode(m)) ?? Data()
-        case .restaurant(let m): data = (try? encoder.encode(m)) ?? Data()
-        case .transport(let m): data = (try? encoder.encode(m)) ?? Data()
-        }
-        
-        guard let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return .null
-        }
-        
-        var result: [String: AnyJSON] = [:]
-        for (key, value) in dict {
-            switch value {
-            case let str as String: result[key] = .string(str)
-            case let num as Int: result[key] = .integer(num)
-            case let num as Double: result[key] = .double(num)
-            case let bool as Bool: result[key] = .bool(bool)
-            default: break
-            }
-        }
-        return .object(result)
     }
 }

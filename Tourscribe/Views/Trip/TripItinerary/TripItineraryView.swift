@@ -5,6 +5,8 @@ import SwiftUI
 
 struct TripItineraryView: View {
     @State private var viewModel: TripItemViewModel
+    @State private var editingItem: TripItem?
+    @State private var isShowingCreateSheet = false
     let trip: Trip
     
     init(trip: Trip) {
@@ -45,10 +47,17 @@ struct TripItineraryView: View {
         .alert(item: $viewModel.alert) { alert in
             Alert(title: Text(alert.title), message: Text(alert.message), dismissButton: .default(Text(String(localized: "button.ok"))))
         }
-        .sheet(isPresented: $viewModel.isShowingCreateSheet) { 
+        .sheet(isPresented: $isShowingCreateSheet) { 
             NavigationStack {
                 CreateTripItemView(tripId: trip.id) { newItem in
                     viewModel.addItem(newItem)
+                }
+            }
+        }
+        .sheet(item: $editingItem) { item in
+            NavigationStack {
+                UpdateTripItemView(tripItem: item) { updatedItem in
+                    viewModel.updateItem(updatedItem)
                 }
             }
         }
@@ -104,7 +113,7 @@ struct TripItineraryView: View {
             
             ForEach(items) { item in
                 TimelineItemView(item: item, displayDate: date, onEdit: {
-                    // TODO: Show edit view for item
+                    editingItem = item
                 }, onDelete: {
                     Task {
                         await viewModel.deleteTripItem(itemId: item.id)
@@ -116,7 +125,7 @@ struct TripItineraryView: View {
     
     @ViewBuilder
     private var addButton: some View {
-        Button(action: { viewModel.isShowingCreateSheet = true }) {
+        Button(action: { isShowingCreateSheet = true }) {
             Image(systemName: "plus")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(.white)

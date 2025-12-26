@@ -21,9 +21,10 @@ class TripItemService: TripItemServiceProtocol {
         return try JSONDecoders.iso8601.decode(TripItem.self, from: response.data)
     }
 
-    func updateTripItem(itemId: Int64, data: TripItemUpdateRequest, locations: [Location]?) async throws -> TripItem {
-        //TODO implement me
-        throw NSError(domain: "Not implemented", code: 0, userInfo: nil)
+    func updateTripItem(itemId: Int64, request: TripItemUpdateRequest) async throws -> TripItem {
+        let params = request.toRPCParams(itemId: itemId)
+        let response = try await client.rpc("update_trip_item", params: params).execute()
+        return try JSONDecoders.iso8601.decode(TripItem.self, from: response.data)
     }
 
     func deleteTripItem(itemId: Int64) async throws {

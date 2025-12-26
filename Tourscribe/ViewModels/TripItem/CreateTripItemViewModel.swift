@@ -54,7 +54,7 @@ class CreateTripItemViewModel {
         defer { isLoading = false }
         
         do {
-            let tripItem = try TripItem(
+            let request = try TripItemCreateRequest(
                 tripId: tripId,
                 name: name,
                 itemType: selectedItemType,
@@ -63,8 +63,6 @@ class CreateTripItemViewModel {
                 metadata: buildMetadata(),
                 locations: locations
             )
-            
-            let request = TripItemCreateRequest(tripItem: tripItem)
             let newItem = try await tripItemService.createTripItem(request: request)
             self.createdItem = newItem
         } catch let error as TripItemValidationError {

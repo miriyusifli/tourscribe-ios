@@ -1,38 +1,73 @@
 import Foundation
+import Supabase
 
-struct TripItemUpdateRequest: Encodable {
+private let iso8601Formatter = ISO8601DateFormatter()
+
+struct TripItemUpdateRequest {
     let name: String
     let itemType: TripItemType
-    let startTime: Date?
-    let endTime: Date?
-    let metadata: TripItemMetadata?
-
-    enum CodingKeys: String, CodingKey {
-        case name
-        case itemType = "item_type"
-        case startTime = "start_time"
-        case endTime = "end_time"
-        case metadata
+    let startDateTime: Date
+    let endDateTime: Date
+    let metadata: TripItemMetadata
+    let locations: [Location]
+    
+    init(
+        name: String,
+        itemType: TripItemType,
+        startDateTime: Date,
+        endDateTime: Date,
+        metadata: TripItemMetadata,
+        locations: [Location]
+    ) throws {
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TripItemValidationError.nameRequired
+        }
+        guard startDateTime <= endDateTime else {
+            throw TripItemValidationError.invalidDateRange
+        }
+        guard !locations.isEmpty else {
+            throw TripItemValidationError.locationRequired
+        }
+        if itemType == .flight && locations.count < 2 {
+            throw TripItemValidationError.flightLocationsRequired
+        }
+        try Self.validateMetadata(metadata, for: itemType)
+        
+        self.name = name
+        self.itemType = itemType
+        self.startDateTime = startDateTime
+        self.endDateTime = endDateTime
+        self.metadata = metadata
+        self.locations = locations
     }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(name, forKey: .name)
-        try container.encode(itemType, forKey: .itemType)
-        try container.encodeIfPresent(startTime, forKey: .startTime)
-        try container.encodeIfPresent(endTime, forKey: .endTime)
-
-        switch metadata {
-        case .flight(let flightData):
-            try container.encode(flightData, forKey: .metadata)
-        case .accommodation(let accommodationData):
-            try container.encode(accommodationData, forKey: .metadata)
-        case .activity(let activityData):
-            try container.encode(activityData, forKey: .metadata)
-        case .restaurant(let restaurantData):
-            try container.encode(restaurantData, forKey: .metadata)
-        case .none:
+    
+    private static func validateMetadata(_ metadata: TripItemMetadata, for itemType: TripItemType) throws {
+        switch itemType {
+        case .flight:
+            guard case .flight(let data) = metadata,
+                  !data.airline.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !data.flightNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw TripItemValidationError.flightMetadataRequired
+            }
+        case .transport:
+            guard case .transport(let data) = metadata,
+                  !data.carrier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !data.vehicleNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw TripItemValidationError.transportMetadataRequired
+            }
+        case .accommodation, .activity, .restaurant:
             break
         }
+    }
+    
+    func toRPCParams(itemId: Int64) -> [String: AnyJSON] {
+        [
+            "p_item_id": .integer(Int(itemId)),
+            "p_name": .string(name),
+            "p_start_datetime": .string(iso8601Formatter.string(from: startDateTime)),
+            "p_end_datetime": .string(iso8601Formatter.string(from: endDateTime)),
+            "p_metadata": metadata.toAnyJSON(),
+            "p_locations": .array(locations.map { $0.toAnyJSON() })
+        ]
     }
 }

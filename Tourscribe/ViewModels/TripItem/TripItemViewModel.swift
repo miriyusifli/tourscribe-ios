@@ -10,7 +10,6 @@ class TripItemViewModel {
     var tripItems: [TripItem] = []
     var isLoading = false
     var alert: AlertType? = nil
-    var isShowingCreateSheet = false
     
     init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService()) {
         self.tripId = tripId
@@ -74,28 +73,10 @@ class TripItemViewModel {
         let index = tripItems.firstIndex { $0.startDateTime > item.startDateTime } ?? tripItems.endIndex
         tripItems.insert(item, at: index)
     }
-
-    func updateTripItem(item: TripItem) async {
+    
+    func updateItem(_ item: TripItem) {
         guard let index = tripItems.firstIndex(where: { $0.id == item.id }) else { return }
-        
-        let request = TripItemUpdateRequest(
-            name: item.name,
-            itemType: item.itemType,
-            startDateTime: item.startDateTime,
-            endDateTime: item.endDateTime,
-            metadata: item.metadata
-        )
-        
-        do {
-            let updatedItem = try await tripItemService.updateTripItem(
-                itemId: item.id,
-                data: request,
-                locations: item.locations
-            )
-            tripItems[index] = updatedItem
-        } catch {
-            alert = .error(String(localized: "error.generic.unknown"))
-        }
+        tripItems[index] = item
     }
     
     func deleteTripItem(itemId: Int64) async {

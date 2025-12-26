@@ -23,14 +23,13 @@ struct BaseTimelineItemView<Content: View>: View {
             RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.large, style: .continuous)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: StyleGuide.Dimensions.borderWidth)
         )
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive, action: onDelete) {
-                Label(String(localized: "button.delete"), systemImage: "trash")
-            }
+        .contextMenu {
             Button(action: onEdit) {
                 Label(String(localized: "button.edit"), systemImage: "pencil")
             }
-            .tint(.orange)
+            Button(role: .destructive, action: onDelete) {
+                Label(String(localized: "button.delete"), systemImage: "trash")
+            }
         }
         .onTapGesture {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
