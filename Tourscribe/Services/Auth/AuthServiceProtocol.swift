@@ -7,6 +7,7 @@ protocol AuthServiceProtocol {
     func signOut() async throws
     func getCurrentUser() async throws -> User?
     func getProfile(userId: String) async throws -> UserProfile?
+    func createProfile(data: ProfileCreateRequest) async throws
     func updateProfile(userId: String, data: ProfileUpdateRequest) async throws
     func signInWithSocial(provider: SocialAuthProvider) async throws -> User
     

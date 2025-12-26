@@ -35,23 +35,8 @@ class ProfileSetupViewModel {
     // MARK: - Actions
     
     func continueToInterests() {
-        if validatePersonalInfo() {
-            navigateToInterests = true
-        }
-    }
-    
-    func completeSetup() {
-        if selectedInterests.count < 3 {
-            let message = String(format: String(localized: "validation.interests.minimum"), 3)
-            alert = .error(message)
-            return
-        }
-        
-        Task {
-            isLoading = true
-            defer { isLoading = false }
-            
-            let request = ProfileUpdateRequest(
+        do {
+            _ = try ProfileCreateRequest(
                 id: userId,
                 email: email,
                 firstName: firstName,
@@ -60,41 +45,42 @@ class ProfileSetupViewModel {
                 gender: gender,
                 interests: Array(selectedInterests)
             )
+            navigateToInterests = true
+        } catch ProfileValidationError.insufficientInterests {
+            // Ignore interests validation at this step
+            navigateToInterests = true
+        } catch {
+            alert = .error(error.localizedDescription)
+        }
+    }
+    
+    func completeSetup() {
+        let request: ProfileCreateRequest
+        do {
+            request = try ProfileCreateRequest(
+                id: userId,
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                birthDate: birthDate,
+                gender: gender,
+                interests: Array(selectedInterests)
+            )
+        } catch {
+            alert = .error(error.localizedDescription)
+            return
+        }
+        
+        Task {
+            isLoading = true
+            defer { isLoading = false }
             
             do {
-                try await authService.updateProfile(userId: userId, data: request)
+                try await authService.createProfile(data: request)
                 setupSuccess = true
             } catch {
                 alert = .error(String(localized: "error.generic.unknown"))
             }
         }
-    }
-    
-    // MARK: - Validation
-    
-    private func validatePersonalInfo() -> Bool {
-        if firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || 
-           lastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            alert = .error(String(localized: "validation.name.missing"))
-            return false
-        }
-        
-        if gender.isEmpty {
-            alert = .error(String(localized: "validation.gender.missing"))
-            return false
-        }
-        
-        // Validate Age (Minimum 12 years old)
-        let calendar = Calendar.current
-        let ageComponents = calendar.dateComponents([.year], from: birthDate, to: Date())
-        let age = ageComponents.year ?? 0
-        
-        if age < 12 {
-            let message = String(format: String(localized: "validation.age.minimum"), 12)
-            alert = .error(message)
-            return false
-        }
-        
-        return true
     }
 }

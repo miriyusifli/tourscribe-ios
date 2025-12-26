@@ -4,6 +4,7 @@ struct MainTabView<MainContent: View>: View {
     @Binding var selection: Int
     let mainTabTitle: String
     let mainTabIcon: String
+    let user: UserProfile
     @ViewBuilder let mainContent: () -> MainContent
     
     var body: some View {
@@ -17,7 +18,7 @@ struct MainTabView<MainContent: View>: View {
             // Placeholder for Ranking (Tag 1)
             // RankingView().tabItem { ... }.tag(1)
             
-            ProfileView()
+            ProfileView(user: user)
                 .tabItem {
                     Label(String(localized: "tab.profile"), systemImage: "person.fill")
                 }

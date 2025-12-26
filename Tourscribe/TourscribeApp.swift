@@ -10,14 +10,14 @@ struct TourscribeApp: App {
                 if appViewModel.isLoading {
                     LoadingView()
                 } else {
-                    if appViewModel.isLoggedIn {
-                        MyTrips()
+                    if let userProfile = appViewModel.userProfile {
+                        MyTrips(user: userProfile)
                             .transition(.opacity)
                     } else {
                         NavigationStack {
                             SignInView {
                                 withAnimation {
-                                    appViewModel.isLoggedIn = true
+                                    appViewModel.checkSession()
                                 }
                             }
                         }

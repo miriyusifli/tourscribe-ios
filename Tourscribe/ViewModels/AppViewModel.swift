@@ -7,6 +7,7 @@ import Observation
 class AppViewModel {
     var isLoggedIn = false
     var isLoading = true
+    var userProfile: UserProfile?
     
     private let authService: AuthServiceProtocol
     
@@ -18,9 +19,8 @@ class AppViewModel {
     func checkSession() {
         Task {
             if let session = await authService.session {
-                // Check if a profile exists for the authenticated user
-                let profileExists = (try? await authService.getProfile(userId: session.user.id.uuidString)) != nil
-                if profileExists {
+                if let profile = try? await authService.getProfile(userId: session.user.id.uuidString) {
+                    userProfile = profile
                     isLoggedIn = true
                 }
             }
@@ -29,6 +29,7 @@ class AppViewModel {
             // Listen for logout events
             for await (event, _) in authService.authStateChanges {
                 if event == .signedOut {
+                    userProfile = nil
                     isLoggedIn = false
                 }
             }

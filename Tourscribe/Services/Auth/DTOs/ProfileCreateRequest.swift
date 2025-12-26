@@ -1,13 +1,25 @@
 import Foundation
-import Supabase
 
-struct ProfileUpdateRequest {
+struct ProfileCreateRequest: Codable {
+    let id: String
+    let email: String
     let firstName: String
     let lastName: String
     let birthDate: Date
     let gender: String
+    let interests: [String]
     
-    init(firstName: String, lastName: String, birthDate: Date, gender: String) throws {
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case birthDate = "birth_date"
+        case gender
+        case interests
+    }
+    
+    init(id: String, email: String, firstName: String, lastName: String, birthDate: Date, gender: String, interests: [String]) throws {
         if firstName.trimmingCharacters(in: .whitespaces).isEmpty {
             throw ProfileValidationError.emptyFirstName
         }
@@ -21,19 +33,16 @@ struct ProfileUpdateRequest {
         if age < AppConfig.minimumSignupAge {
             throw ProfileValidationError.underAge
         }
+        if interests.count < AppConfig.minimumInterests {
+            throw ProfileValidationError.insufficientInterests
+        }
         
+        self.id = id
+        self.email = email
         self.firstName = firstName
         self.lastName = lastName
         self.birthDate = birthDate
         self.gender = gender
-    }
-    
-    func toRPCParams() -> [String: AnyJSON] {
-        [
-            "p_first_name": .string(firstName),
-            "p_last_name": .string(lastName),
-            "p_birth_date": .string(DateFormatters.iso8601Date.string(from: birthDate)),
-            "p_gender": .string(gender)
-        ]
+        self.interests = interests
     }
 }

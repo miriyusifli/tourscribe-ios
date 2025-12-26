@@ -5,12 +5,15 @@ struct MyTrips: View {
     @StateObject private var viewModel = MyTripsViewModel()
     @State private var navigationPath = NavigationPath()
     @State private var selectedTab = 0
+    
+    let user: UserProfile
 
     var body: some View {
         MainTabView(
             selection: $selectedTab,
             mainTabTitle: String(localized: "tab.my_trips"),
-            mainTabIcon: "suitcase.fill"
+            mainTabIcon: "suitcase.fill",
+            user: user
         ) {
             content
         }
@@ -54,8 +57,4 @@ struct MyTrips: View {
             )
         }
     }
-}
-
-#Preview {
-    MyTrips()
 }

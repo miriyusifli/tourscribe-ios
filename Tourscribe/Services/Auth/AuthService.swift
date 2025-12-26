@@ -40,6 +40,10 @@ class AuthService: AuthServiceProtocol {
 
     
     func updateProfile(userId: String, data: ProfileUpdateRequest) async throws {
+        try await client.rpc("update_profile", params: data.toRPCParams()).execute()
+    }
+    
+    func createProfile(data: ProfileCreateRequest) async throws {
         try await client.from("profiles")
             .insert(data)
             .execute()
