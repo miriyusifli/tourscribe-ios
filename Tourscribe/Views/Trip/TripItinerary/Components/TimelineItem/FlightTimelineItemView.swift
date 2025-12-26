@@ -62,6 +62,10 @@ struct FlightTimelineItemView: View {
                             .fill(item.itemType.color)
                             .frame(width: StyleGuide.Dimensions.routeDotSize, height: StyleGuide.Dimensions.routeDotSize)
                     }
+                    
+                    Text(flightData.airline)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 
                 // Arrival
