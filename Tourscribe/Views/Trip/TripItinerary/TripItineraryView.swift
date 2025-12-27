@@ -6,6 +6,7 @@ import SwiftUI
 struct TripItineraryView: View {
     @State private var viewModel: TripItemViewModel
     @State private var editingItem: TripItem?
+    @State private var itemToDelete: TripItem?
     @State private var isShowingCreateSheet = false
     @State private var showLLMChat = false
     let trip: Trip
@@ -64,6 +65,21 @@ struct TripItineraryView: View {
                     viewModel.updateItem(updatedItem)
                 }
             }
+        }
+        .alert(String(localized: "alert.delete.item.title", defaultValue: "Delete Item"), isPresented: .init(
+            get: { itemToDelete != nil },
+            set: { if !$0 { itemToDelete = nil } }
+        )) {
+            Button(String(localized: "button.cancel"), role: .cancel) { }
+            Button(String(localized: "button.delete"), role: .destructive) {
+                if let item = itemToDelete {
+                    Task {
+                        await viewModel.deleteTripItem(itemId: item.id)
+                    }
+                }
+            }
+        } message: {
+            Text(String(localized: "alert.delete.item.message", defaultValue: "Are you sure you want to delete this item?"))
         }
     }
     
@@ -124,9 +140,7 @@ struct TripItineraryView: View {
                 TimelineItemView(item: item, displayDate: date, onEdit: {
                     editingItem = item
                 }, onDelete: {
-                    Task {
-                        await viewModel.deleteTripItem(itemId: item.id)
-                    }
+                    itemToDelete = item
                 })
             }
         }
