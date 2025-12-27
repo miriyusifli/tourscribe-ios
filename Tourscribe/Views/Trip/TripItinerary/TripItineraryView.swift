@@ -101,7 +101,7 @@ struct TripItineraryView: View {
     @ViewBuilder
     private var actionButtons: some View {
         HStack(spacing: StyleGuide.Spacing.large) {
-            HeaderButton(icon: "sparkles", title: String(localized:"button.recommendations"), iconColor: .yellow) {
+            HeaderButton(icon: "sparkles", title: String(localized:"button.ai_planner"), iconColor: .yellow) {
                 showLLMChat = true
             }
             NavigationLink {

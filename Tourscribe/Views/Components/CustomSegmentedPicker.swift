@@ -22,7 +22,7 @@ struct CustomSegmentedPicker: UIViewRepresentable {
         ], for: .selected)
         
         control.setTitleTextAttributes([
-            .foregroundColor: UIColor(Color.textSecondary),
+            .foregroundColor: UIColor(Color.textPrimary),
             .font: font
         ], for: .normal)
         

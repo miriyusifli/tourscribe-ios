@@ -20,24 +20,24 @@ struct HeaderButtonLabel: View {
     let iconColor: Color
     
     var body: some View {
-        VStack {
+        HStack(spacing: StyleGuide.Spacing.standard) {
             Image(systemName: icon)
-                .font(.system(size: 30))
-                .foregroundColor(iconColor)
-                .padding(StyleGuide.Spacing.small)
+                .font(.system(size: 18))
+                .foregroundColor(.white)
+                .frame(width: 36, height: 36)
+                .background(iconColor)
+                .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.small, style: .continuous))
             Text(title)
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
+            Spacer()
         }
         .foregroundColor(.textPrimary)
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: 100)
-        .padding(.vertical, StyleGuide.Padding.small)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.xxlarge))
+        .padding(StyleGuide.Padding.standard)
+        .background(iconColor.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.large))
         .overlay(
-            RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.xxlarge)
-                .stroke(Color.glassBorder, lineWidth: 1)
+            RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.large)
+                .stroke(iconColor.opacity(0.1), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
     }
 }

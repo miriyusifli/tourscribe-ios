@@ -138,6 +138,18 @@
         }
       }
     },
+    "button.ai_planner" : {
+      "comment" : "Button title for trip recommendations.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI planner"
+          }
+        }
+      }
+    },
     "button.back" : {
       "comment" : "A button label that goes back one step in a multi-step process.",
       "extractionState" : "manual",
@@ -284,18 +296,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
-          }
-        }
-      }
-    },
-    "button.recommendations" : {
-      "comment" : "Button title for trip recommendations.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recommendations"
           }
         }
       }
