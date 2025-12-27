@@ -119,12 +119,19 @@ struct TripItineraryView: View {
     
     @ViewBuilder
     private var timelineSection: some View {
-        LazyVStack(spacing: StyleGuide.Spacing.xxlarge) {
-            ForEach(viewModel.itemsByDate, id: \.date) { dayGroup in
-                daySectionView(date: dayGroup.date, items: dayGroup.items)
+        if viewModel.tripItems.isEmpty {
+            EmptyStateView(
+                imageName: "airplane.up.forward.app.fill",
+                message: String(localized: "empty.itinerary", defaultValue: "No items yet. Start planning your trip!")
+            )
+        } else {
+            LazyVStack(spacing: StyleGuide.Spacing.xxlarge) {
+                ForEach(viewModel.itemsByDate, id: \.date) { dayGroup in
+                    daySectionView(date: dayGroup.date, items: dayGroup.items)
+                }
             }
+            .padding(.top, StyleGuide.Padding.standard)
         }
-        .padding(.top, StyleGuide.Padding.standard)
     }
     
     @ViewBuilder
