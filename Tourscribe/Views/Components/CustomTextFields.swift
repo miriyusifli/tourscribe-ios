@@ -13,7 +13,7 @@ struct CustomTextField: View {
                     .font(.system(size: 18))
                     .frame(width: StyleGuide.Padding.large)
             }
-            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.gray))
+            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.textSecondary.opacity(0.5)))
                 .font(.system(size: 16))
         }
         .padding(.horizontal, StyleGuide.Padding.medium)
@@ -34,7 +34,7 @@ struct CustomSecureField: View {
                 .foregroundColor(.primaryColor)
                 .font(.system(size: 18))
                 .frame(width: StyleGuide.Padding.large)
-            SecureField("", text: $text, prompt: Text(placeholder).foregroundColor(.gray))
+            SecureField("", text: $text, prompt: Text(placeholder).foregroundColor(.textSecondary.opacity(0.5)))
                 .foregroundColor(.black)
                 .font(.system(size: 16))
         }

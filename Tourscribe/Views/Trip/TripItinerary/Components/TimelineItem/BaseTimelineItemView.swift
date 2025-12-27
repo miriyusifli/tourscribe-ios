@@ -125,6 +125,7 @@ struct BaseTimelineItemView<Content: View>: View {
 struct SingleLocationView: View {
     let location: Location
     let isExpanded: Bool
+    var backgroundColor: Color = Color.lightGray
     
     var body: some View {
         VStack(alignment: .leading, spacing: StyleGuide.Spacing.small) {
@@ -146,7 +147,7 @@ struct SingleLocationView: View {
         }
         .padding(StyleGuide.Padding.small)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.lightGray)
+        .background(backgroundColor)
         .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.small, style: .continuous))
     }
 }

@@ -28,6 +28,14 @@ enum TripItemType: String, Codable, CaseIterable, Hashable {
         }
     }
     
+    var lightColor: Color {
+        color.opacity(0.1)
+    }
+    
+    var lighterColor: Color {
+        color.opacity(0.05)
+    }
+    
     var description: String {
         switch self {
         case .flight:

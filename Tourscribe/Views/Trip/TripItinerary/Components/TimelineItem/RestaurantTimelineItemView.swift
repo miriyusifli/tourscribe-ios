@@ -8,7 +8,7 @@ struct RestaurantTimelineItemView: View {
     var body: some View {
         BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) { isExpanded in
             if let location = item.location {
-                SingleLocationView(location: location, isExpanded: isExpanded)
+                SingleLocationView(location: location, isExpanded: isExpanded, backgroundColor: item.itemType.lighterColor)
             }
         }
     }

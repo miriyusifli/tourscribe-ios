@@ -24,7 +24,7 @@ struct AccommodationTimelineItemView: View {
         BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) { isExpanded in
             checkInOutSection
             if let location = item.location {
-                SingleLocationView(location: location, isExpanded: isExpanded)
+                SingleLocationView(location: location, isExpanded: isExpanded, backgroundColor: item.itemType.lighterColor)
             }
         }
     }
@@ -47,7 +47,7 @@ struct AccommodationTimelineItemView: View {
             }
         }
         .padding(StyleGuide.Padding.standard)
-        .background(item.itemType.color.opacity(0.1))
+        .background(item.itemType.lightColor)
         .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.small, style: .continuous))
     }
     
