@@ -1,14 +1,12 @@
 import SwiftUI
 
-struct TripListAddButton: View {
-    @ObservedObject var viewModel: MyTripsViewModel
+struct FloatingActionButton: View {
+    let action: () -> Void
     
     var body: some View {
         HStack {
             Spacer()
-            Button(action: {
-                viewModel.isShowingCreateTrip = true
-            }) {
+            Button(action: action) {
                 Image(systemName: "plus")
                     .font(.system(size: StyleGuide.IconSize.standard, weight: .bold))
                     .foregroundColor(.white)
@@ -19,6 +17,5 @@ struct TripListAddButton: View {
             .padding(.trailing, StyleGuide.Padding.large)
             .padding(.bottom, StyleGuide.Padding.large)
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }

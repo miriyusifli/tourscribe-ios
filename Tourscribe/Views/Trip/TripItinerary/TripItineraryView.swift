@@ -45,7 +45,7 @@ struct TripItineraryView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                addButton
+                FloatingActionButton(action: { isShowingCreateSheet = true })
             }
         }
         .task { if viewModel.tripItems.isEmpty { await viewModel.fetchTripItems() } }
@@ -151,22 +151,6 @@ struct TripItineraryView: View {
                 })
             }
         }
-    }
-    
-    @ViewBuilder
-    private var addButton: some View {
-        Button(action: { isShowingCreateSheet = true }) {
-            Image(systemName: "plus")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 60, height: 60)
-                .background(Color.primaryColor)
-                .clipShape(Circle())
-                .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
-        }
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.trailing, StyleGuide.Padding.large)
-        .padding(.bottom, StyleGuide.Padding.large)
     }
 }
 

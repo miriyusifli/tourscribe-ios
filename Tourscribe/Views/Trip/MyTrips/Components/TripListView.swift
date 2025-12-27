@@ -13,7 +13,7 @@ struct TripListView: View {
             await viewModel.fetchTrips(for: viewModel.selectedSegment)
         }
         .safeAreaInset(edge: .bottom) {
-            TripListAddButton(viewModel: viewModel)
+            FloatingActionButton(action: { viewModel.isShowingCreateTrip = true })
         }
         .sheet(item: $editingTrip) { trip in
             NavigationStack {
