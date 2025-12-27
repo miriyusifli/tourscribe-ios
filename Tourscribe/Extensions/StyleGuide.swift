@@ -4,6 +4,8 @@ import CoreGraphics
 
 enum StyleGuide {
     enum Spacing {
+        static let none: CGFloat = 0
+        static let xsmall: CGFloat = 2
         static let small: CGFloat = 4
         static let medium: CGFloat = 8
         static let standard: CGFloat = 12

@@ -88,6 +88,7 @@ struct CreateTripItemView: View {
                         Image(systemName: viewModel.selectedItemType.icon)
                             .foregroundColor(viewModel.selectedItemType.color)
                         Text(viewModel.selectedItemType.rawValue.capitalized)
+                            .foregroundColor(viewModel.selectedItemType.color)
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.caption)
                             .foregroundColor(.secondary)

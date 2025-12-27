@@ -38,14 +38,21 @@ struct TripCardView: View {
     
     private var formattedDates: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
         
         if let start = trip.startDate, let end = trip.endDate {
-            let startStr = formatter.string(from: start)
-            let endStr = formatter.string(from: end)
-            let year = Calendar.current.component(.year, from: start)
-            return "\(startStr) - \(endStr), \(year)"
+            let calendar = Calendar.current
+            let startYear = calendar.component(.year, from: start)
+            let endYear = calendar.component(.year, from: end)
+            
+            if startYear != endYear {
+                formatter.dateFormat = "MMM d, yyyy"
+                return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+            } else {
+                formatter.dateFormat = "MMM d"
+                return "\(formatter.string(from: start)) - \(formatter.string(from: end)), \(startYear)"
+            }
         } else if let start = trip.startDate {
+            formatter.dateFormat = "MMM d"
             return formatter.string(from: start)
         }
         return "Dates TBD"
