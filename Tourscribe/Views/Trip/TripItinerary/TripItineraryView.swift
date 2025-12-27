@@ -7,15 +7,19 @@ struct TripItineraryView: View {
     @State private var viewModel: TripItemViewModel
     @State private var editingItem: TripItem?
     @State private var isShowingCreateSheet = false
+    @State private var showLLMChat = false
     let trip: Trip
+    let user: UserProfile
     
-    init(trip: Trip) {
+    init(trip: Trip, user: UserProfile) {
         self.trip = trip
+        self.user = user
         self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id))
     }
     
-    init(trip: Trip, previewItems: [TripItem]) {
+    init(trip: Trip, user: UserProfile, previewItems: [TripItem]) {
         self.trip = trip
+        self.user = user
         self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id, previewItems: previewItems))
     }
     
@@ -82,13 +86,18 @@ struct TripItineraryView: View {
     private var actionButtons: some View {
         HStack(spacing: StyleGuide.Spacing.large) {
             HeaderButton(icon: "sparkles", title: String(localized:"button.recommendations"), iconColor: .yellow) {
-                // TODO: Recommendations Action
+                showLLMChat = true
             }
             NavigationLink {
                 TripMapView(tripItems: viewModel.tripItems, tripName: trip.name)
             } label: {
                 HeaderButtonLabel(icon: "map.fill", title: String(localized:"button.map_view"), iconColor: .green)
             }
+        }
+        .sheet(isPresented: $showLLMChat, onDismiss: {
+            Task { await viewModel.fetchTripItems() }
+        }) {
+            LLMChatView(tripId: trip.id, user: user)
         }
     }
     
@@ -235,6 +244,7 @@ struct TripItineraryView: View {
             createdAt: Date(),
             updatedAt: nil
         ),
+        user: UserProfile(id: "", email: "", firstName: "", lastName: "", birthDate: Date(), gender: "", interests: [], createdAt: Date(), updatedAt: Date()),
         previewItems: previewItems
     )
 }

@@ -31,7 +31,7 @@ struct MyTrips: View {
                 .padding(.top, StyleGuide.Padding.standard)
             }
             .navigationDestination(for: Trip.self) { trip in
-                TripItineraryView(trip: trip)
+                TripItineraryView(trip: trip, user: user)
             }
         }
         .task(id: viewModel.selectedSegment) {

@@ -13,7 +13,7 @@ struct TripItemCreateRequest {
     let locations: [Location]
     
     private static func isValidName(_ name: String) -> Bool {
-        name.allSatisfy { $0.isLetter || $0.isNumber || $0.isWhitespace }
+        name.allSatisfy { $0.isLetter || $0.isNumber || $0.isWhitespace || $0 == "-" }
     }
     
     init(
