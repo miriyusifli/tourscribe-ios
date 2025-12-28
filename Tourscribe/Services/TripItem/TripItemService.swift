@@ -4,15 +4,30 @@ import Supabase
 class TripItemService: TripItemServiceProtocol {
     private let client = SupabaseClientManager.shared.client
 
-    func fetchTripItems(for tripId: Int64) async throws -> [TripItem] {
-        let response = try await client
+    func fetchTripItems(for tripId: Int64, cursor: TripItemCursor?, limit: Int) async throws -> TripItemPage {
+        
+        var query = client
             .from("trip_items")
             .select("id, trip_id, name, item_type, start_datetime, end_datetime, metadata, created_at, updated_at, trip_item_locations(*)")
             .eq("trip_id", value: String(tripId))
+        
+        if let cursor = cursor {
+            let cursorDateStr = DateFormatters.iso8601Date.string(from: cursor.startDateTime)
+            query = query.gte("start_datetime", value: cursorDateStr)
+            query = query.gt("id", value: String(cursor.id))
+        }
+        
+        let response = try await query
             .order("start_datetime", ascending: true)
+            .order("id", ascending: true)
+            .limit(limit + 1)
             .execute()
         
-        return try JSONDecoders.iso8601.decode([TripItem].self, from: response.data)
+        var items = try JSONDecoders.iso8601.decode([TripItem].self, from: response.data)
+        let hasMore = items.count > limit
+        if hasMore { items.removeLast() }
+        
+        return TripItemPage(items: items, hasMore: hasMore)
     }
 
     func createTripItem(request: TripItemCreateRequest) async throws -> TripItem {

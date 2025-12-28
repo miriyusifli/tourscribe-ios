@@ -148,6 +148,11 @@ struct TripItineraryView: View {
                         }, onDelete: {
                             itemToDelete = item
                         })
+                        .onAppear {
+                            if item.id == viewModel.tripItems.last?.id {
+                                Task { await viewModel.loadMore() }
+                            }
+                        }
                     }
                 } header: {
                     VStack(alignment: .leading, spacing: StyleGuide.Spacing.large) {
@@ -159,6 +164,11 @@ struct TripItineraryView: View {
                     }
                     .padding(.bottom, StyleGuide.Padding.standard)
                 }
+            }
+            
+            if viewModel.isLoadingMore {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
             }
         }
     }

@@ -11,7 +11,14 @@ class TripItemViewModel {
     
     var tripItems: [TripItem] = []
     var isLoading = false
+    var isLoadingMore = false
+    var hasMore = true
     var alert: AlertType? = nil
+    
+    private var cursor: TripItemCursor? {
+        guard let last = tripItems.last else { return nil }
+        return TripItemCursor(startDateTime: last.startDateTime, id: last.id)
+    }
     
     init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService(), tripService: TripServiceProtocol = TripService(), tripStore: TripStore = .shared) {
         self.tripId = tripId
@@ -65,14 +72,35 @@ class TripItemViewModel {
     }
     
     func fetchTripItems() async {
-        isLoading = true
+        if tripItems.isEmpty {
+            isLoading = true
+        }
+        
         do {
-            tripItems = try await tripItemService.fetchTripItems(for: tripId)
+            let page = try await tripItemService.fetchTripItems(for: tripId, cursor: nil, limit: AppConfig.tripItemsPageSize)
+            tripItems = page.items
+            hasMore = page.hasMore
         } catch {
-            print(error)
             alert = .error(String(localized: "error.generic.unknown"))
         }
+        
         isLoading = false
+    }
+    
+    func loadMore() async {
+        guard hasMore, !isLoadingMore, !isLoading else { return }
+        
+        isLoadingMore = true
+        
+        do {
+            let page = try await tripItemService.fetchTripItems(for: tripId, cursor: cursor, limit: AppConfig.tripItemsPageSize)
+            tripItems.append(contentsOf: page.items)
+            hasMore = page.hasMore
+        } catch {
+            // Silent fail for load more
+        }
+        
+        isLoadingMore = false
     }
     
     func addItem(_ item: TripItem) {

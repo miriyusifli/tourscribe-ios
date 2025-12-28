@@ -8,4 +8,5 @@ enum AppConfig {
     
     // MARK: - Pagination
     static let tripsPageSize: Int = 20
+    static let tripItemsPageSize: Int = 20
 }
