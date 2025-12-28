@@ -6,9 +6,14 @@ struct TripListView: View {
     @State private var tripToDelete: Trip?
 
     var body: some View {
-        ScrollView {
+        List {
             listContent
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: StyleGuide.Padding.xlarge, bottom: 0, trailing: StyleGuide.Padding.xlarge))
+                .listRowBackground(Color.clear)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .refreshable {
             await viewModel.fetchTrips(for: viewModel.selectedSegment)
         }
@@ -53,26 +58,24 @@ struct TripListView: View {
     
     @ViewBuilder
     private var tripRows: some View {
-        LazyVStack(spacing: StyleGuide.Spacing.standard) {
-            ForEach(viewModel.trips) { trip in
-                NavigationLink(value: trip) {
-                    TripCardView(trip: trip)
+        ForEach(viewModel.trips) { trip in
+            ZStack {
+                NavigationLink(value: trip) { EmptyView() }.opacity(0)
+                TripCardView(trip: trip)
+            }
+            .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.xlarge))
+            .contextMenu {
+                Button {
+                    editingTrip = trip
+                } label: {
+                    Label(String(localized: "button.edit"), systemImage: "pencil")
                 }
-                .buttonStyle(.plain)
-                .contextMenu {
-                    Button {
-                        editingTrip = trip
-                    } label: {
-                        Label(String(localized: "button.edit"), systemImage: "pencil")
-                    }
-                    Button(role: .destructive) {
-                        tripToDelete = trip
-                    } label: {
-                        Label(String(localized: "button.delete"), systemImage: "trash")
-                    }
+                Button(role: .destructive) {
+                    tripToDelete = trip
+                } label: {
+                    Label(String(localized: "button.delete"), systemImage: "trash")
                 }
             }
         }
-        .padding(.horizontal, StyleGuide.Padding.xlarge)
     }
 }
