@@ -47,7 +47,7 @@ struct TripItineraryView: View {
                     List {
                         timelineSection
                             .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets(top: 0, leading: StyleGuide.Padding.large, bottom: 0, trailing: StyleGuide.Padding.large))
+                            .listRowInsets(EdgeInsets(top: StyleGuide.Padding.small, leading: StyleGuide.Padding.large, bottom: StyleGuide.Padding.small, trailing: StyleGuide.Padding.large))
                             .listRowBackground(Color.clear)
                     }
                     .listStyle(.plain)

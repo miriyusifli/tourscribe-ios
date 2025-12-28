@@ -9,7 +9,7 @@ struct TripListView: View {
         List {
             listContent
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: StyleGuide.Padding.xlarge, bottom: 0, trailing: StyleGuide.Padding.xlarge))
+                .listRowInsets(EdgeInsets(top: StyleGuide.Padding.small, leading: StyleGuide.Padding.xlarge, bottom: StyleGuide.Padding.small, trailing: StyleGuide.Padding.xlarge))
                 .listRowBackground(Color.clear)
         }
         .listStyle(.plain)
