@@ -76,6 +76,17 @@ struct TripListView: View {
                     Label(String(localized: "button.delete"), systemImage: "trash")
                 }
             }
+            .onAppear {
+                if trip.id == viewModel.trips.last?.id {
+                    Task { await viewModel.loadMore() }
+                }
+            }
+        }
+        
+        if viewModel.isLoadingMore {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .listRowSeparator(.hidden)
         }
     }
 }

@@ -6,11 +6,18 @@ class TripStore {
     static let shared = TripStore()
     
     private(set) var trips: [Trip] = []
+    private(set) var hasMore: Bool = true
     
     private init() {}
     
-    func set(_ trips: [Trip]) {
+    func set(_ trips: [Trip], hasMore: Bool) {
         self.trips = trips
+        self.hasMore = hasMore
+    }
+    
+    func append(_ trips: [Trip], hasMore: Bool) {
+        self.trips.append(contentsOf: trips)
+        self.hasMore = hasMore
     }
     
     func add(_ trip: Trip) {
@@ -29,5 +36,10 @@ class TripStore {
     
     func trip(for id: Int64) -> Trip? {
         trips.first { $0.id == id }
+    }
+    
+    var cursor: TripCursor? {
+        guard let last = trips.last else { return nil }
+        return TripCursor(startDate: last.startDate, id: last.id)
     }
 }

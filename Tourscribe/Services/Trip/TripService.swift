@@ -9,34 +9,56 @@ class TripService: TripServiceProtocol {
         return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
     }
     
-    func fetchUpcomingTrips() async throws -> [Trip] {
-        let user = try await client.auth.session.user
+    func fetchUpcomingTrips(cursor: TripCursor?, limit: Int) async throws -> TripPage {
+        let userId = try await client.auth.session.user.id
         let nowStr = DateFormatters.iso8601Date.string(from: Date())
         
-        let response = try await client
+        var query = client
             .from("trips")
             .select()
-            .eq("user_id", value: user.id)
-            .or("end_date.gte.\(nowStr),end_date.is.null")
+            .eq("user_id", value: userId)
+            .or("start_date.gte.\(nowStr),start_date.is.null")
+        
+        if let cursor = cursor {
+            if let cursorDate = cursor.startDate {
+                query = query.gte("start_date", value: DateFormatters.iso8601Date.string(from: cursorDate))
+            }
+            query = query.gt("id", value: String(cursor.id))
+        }
+        
+        let response = try await query
             .order("start_date", ascending: true)
+            .order("id", ascending: true)
+            .limit(limit + 1)
             .execute()
-            
-        return try JSONDecoders.iso8601.decode([Trip].self, from: response.data)
+        
+        return try decodePage(from: response.data, limit: limit)
     }
     
-    func fetchPastTrips() async throws -> [Trip] {
-        let user = try await client.auth.session.user
+    func fetchPastTrips(cursor: TripCursor?, limit: Int) async throws -> TripPage {
+        let userId = try await client.auth.session.user.id
         let nowStr = DateFormatters.iso8601Date.string(from: Date())
         
-        let response = try await client
+        var query = client
             .from("trips")
             .select()
-            .eq("user_id", value: user.id)
-            .lt("end_date", value: nowStr)
+            .eq("user_id", value: userId)
+            .lt("start_date", value: nowStr)
+        
+        if let cursor = cursor {
+            if let cursorDate = cursor.startDate {
+                query = query.lte("start_date", value: DateFormatters.iso8601Date.string(from: cursorDate))
+            }
+            query = query.lt("id", value: String(cursor.id))
+        }
+        
+        let response = try await query
             .order("start_date", ascending: false)
+            .order("id", ascending: false)
+            .limit(limit + 1)
             .execute()
-            
-        return try JSONDecoders.iso8601.decode([Trip].self, from: response.data)
+        
+        return try decodePage(from: response.data, limit: limit)
     }
     
     func fetchTrip(tripId: Int64) async throws -> Trip {
@@ -61,5 +83,12 @@ class TripService: TripServiceProtocol {
             .delete()
             .eq("id", value: String(tripId))
             .execute()
+    }
+    
+    private func decodePage(from data: Data, limit: Int) throws -> TripPage {
+        var trips = try JSONDecoders.iso8601.decode([Trip].self, from: data)
+        let hasMore = trips.count > limit
+        if hasMore { trips.removeLast() }
+        return TripPage(trips: trips, hasMore: hasMore)
     }
 }
