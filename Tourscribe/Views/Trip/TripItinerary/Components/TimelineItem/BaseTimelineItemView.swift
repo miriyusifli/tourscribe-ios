@@ -31,6 +31,7 @@ struct BaseTimelineItemView<Content: View>: View {
                 Label(String(localized: "button.delete"), systemImage: "trash")
             }
         }
+        .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.large, style: .continuous))
         .onTapGesture {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                 isExpanded.toggle()

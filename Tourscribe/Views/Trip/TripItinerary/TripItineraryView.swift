@@ -34,17 +34,27 @@ struct TripItineraryView: View {
     
     var body: some View {
         AppView {
-            ScrollView(showsIndicators: false) {
+            VStack(spacing: StyleGuide.Spacing.standard) {
                 if viewModel.isLoading && viewModel.tripItems.isEmpty {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    LazyVStack(spacing: StyleGuide.Spacing.xxlarge) {
-                        headerSection
-                        actionButtons
+                    headerSection
+                        .padding(.horizontal, StyleGuide.Padding.large)
+                    actionButtons
+                        .padding(.horizontal, StyleGuide.Padding.standard)
+                    
+                    List {
                         timelineSection
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 0, leading: StyleGuide.Padding.large, bottom: 0, trailing: StyleGuide.Padding.large))
+                            .listRowBackground(Color.clear)
                     }
-                    .padding(.horizontal, StyleGuide.Padding.large)
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .refreshable {
+                        await viewModel.fetchTripItems()
+                    }
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -130,30 +140,25 @@ struct TripItineraryView: View {
                 message: String(localized: "empty.itinerary", defaultValue: "No items yet. Start planning your trip!")
             )
         } else {
-            LazyVStack(spacing: StyleGuide.Spacing.xxlarge) {
-                ForEach(viewModel.itemsByDate, id: \.date) { dayGroup in
-                    daySectionView(date: dayGroup.date, items: dayGroup.items)
+            ForEach(viewModel.itemsByDate, id: \.date) { dayGroup in
+                Section {
+                    ForEach(dayGroup.items) { item in
+                        TimelineItemView(item: item, displayDate: dayGroup.date, onEdit: {
+                            editingItem = item
+                        }, onDelete: {
+                            itemToDelete = item
+                        })
+                    }
+                } header: {
+                    VStack(alignment: .leading, spacing: StyleGuide.Spacing.large) {
+                        DaySectionHeaderView(date: dayGroup.date)
+                        
+                        if let activeAccommodation = viewModel.activeAccommodation(for: dayGroup.date) {
+                            ActiveAccommodationBanner(name: activeAccommodation.location?.name ?? activeAccommodation.name)
+                        }
+                    }
+                    .padding(.bottom, StyleGuide.Padding.standard)
                 }
-            }
-            .padding(.top, StyleGuide.Padding.standard)
-        }
-    }
-    
-    @ViewBuilder
-    private func daySectionView(date: Date, items: [TripItem]) -> some View {
-        VStack(alignment: .leading, spacing: StyleGuide.Spacing.large) {
-            DaySectionHeaderView(date: date)
-            
-            if let activeAccommodation = viewModel.activeAccommodation(for: date) {
-                ActiveAccommodationBanner(name: activeAccommodation.location?.name ?? activeAccommodation.name)
-            }
-            
-            ForEach(items) { item in
-                TimelineItemView(item: item, displayDate: date, onEdit: {
-                    editingItem = item
-                }, onDelete: {
-                    itemToDelete = item
-                })
             }
         }
     }
