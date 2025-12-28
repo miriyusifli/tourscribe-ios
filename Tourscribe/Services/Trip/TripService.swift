@@ -3,9 +3,15 @@ import Supabase
 
 class TripService: TripServiceProtocol {
     private let client = SupabaseClientManager.shared.client
+    private let unsplashService: UnsplashServiceProtocol
+    
+    init(unsplashService: UnsplashServiceProtocol = UnsplashService()) {
+        self.unsplashService = unsplashService
+    }
     
     func createTrip(request: TripCreateRequest) async throws -> Trip {
-        let response = try await client.rpc("create_trip", params: request.toRPCParams()).execute()
+        let imgUrl = try await unsplashService.fetchImageUrl(query: request.name)
+        let response = try await client.rpc("create_trip", params: request.toRPCParams(imgUrl: imgUrl)).execute()
         return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
     }
     

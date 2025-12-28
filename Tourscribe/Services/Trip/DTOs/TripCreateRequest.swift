@@ -18,7 +18,10 @@ struct TripCreateRequest {
         self.name = name
     }
     
-    func toRPCParams() -> [String: AnyJSON] {
-        ["p_name": .string(name)]
+    func toRPCParams(imgUrl: String) -> [String: AnyJSON] {
+        [
+            "p_name": .string(name),
+            "p_img_url": .string(imgUrl)
+        ]
     }
 }

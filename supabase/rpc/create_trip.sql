@@ -2,7 +2,8 @@
 -- Returns the complete trip as JSON
 
 create or replace function create_trip(
-  p_name text
+  p_name text,
+  p_img_url text
 ) returns json
 language plpgsql
 security definer
@@ -10,12 +11,13 @@ as $$
 declare
   v_result json;
 begin
-  insert into trips (user_id, name)
-  values (auth.uid(), p_name)
+  insert into trips (user_id, name, img_url)
+  values (auth.uid(), p_name, p_img_url)
   returning json_build_object(
     'id', id,
     'user_id', user_id,
     'name', name,
+    'img_url', img_url,
     'start_date', start_date,
     'end_date', end_date,
     'version', version,

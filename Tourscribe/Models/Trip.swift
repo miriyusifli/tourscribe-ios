@@ -4,6 +4,7 @@ struct Trip: Identifiable, Codable, Hashable {
     let id: Int64
     let userId: UUID
     let name: String
+    let imgUrl: String
     let startDate: Date?
     let endDate: Date?
     let version: Int
@@ -13,6 +14,7 @@ struct Trip: Identifiable, Codable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, name, version
         case userId = "user_id"
+        case imgUrl = "img_url"
         case startDate = "start_date"
         case endDate = "end_date"
         case createdAt = "created_at"
