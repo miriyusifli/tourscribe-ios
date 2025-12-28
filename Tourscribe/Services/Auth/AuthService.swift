@@ -25,13 +25,14 @@ class AuthService: AuthServiceProtocol {
     
     func getProfile(userId: String) async throws -> UserProfile? {
         do {
-            let profile: UserProfile = try await client
+            let response = try await client
                 .from("profiles")
                 .select()
                 .eq("id", value: userId)
                 .single()
                 .execute()
-                .value
+            
+            let profile = try JSONDecoders.iso8601.decode(UserProfile.self, from: response.data)
             return profile
         } catch {
             return nil

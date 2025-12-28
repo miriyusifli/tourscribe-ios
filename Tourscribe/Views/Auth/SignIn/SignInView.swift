@@ -2,8 +2,6 @@ import SwiftUI
 
 struct SignInView: View {
     @State private var viewModel = SignInViewModel()
-    @Environment(\.dismiss) private var dismiss
-    var onSignInSuccess: (UserProfile) -> Void
     
     var body: some View {
         AppView {
@@ -30,17 +28,6 @@ struct SignInView: View {
                 message: Text(alertType.message),
                 dismissButton: .cancel(Text("OK"))
             )
-        }
-        .onChange(of: viewModel.signInSuccess) { _, success in
-            if success, let profile = viewModel.signedInProfile {
-                onSignInSuccess(profile)
-            }
-        }
-        .navigationDestination(isPresented: $viewModel.requiresProfileSetup) {
-            if let userId = viewModel.userId {
-                ProfileSetupView(userId: userId, email: viewModel.email, onSetupSuccess: onSignInSuccess)
-                    .navigationBarBackButtonHidden(true)
-            }
         }
     }
 
@@ -111,7 +98,7 @@ struct SignInView: View {
         HStack {
             Text("Don't have an account?")
                 .foregroundColor(.textSecondary)
-            NavigationLink(destination: SignUpView(onSignUpSuccess: onSignInSuccess)) {
+            NavigationLink(destination: SignUpView()) {
                 Text("Sign Up")
                     .fontWeight(.bold)
                     .foregroundColor(.primaryColor)
@@ -123,5 +110,5 @@ struct SignInView: View {
 }
 
 #Preview {
-    SignInView(onSignInSuccess: { _ in })
+    SignInView()
 }

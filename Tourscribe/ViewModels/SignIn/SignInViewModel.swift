@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 import Auth
 import Foundation
 
@@ -8,16 +7,12 @@ import Foundation
 class SignInViewModel {
     
     // MARK: - Properties
-    let authService: AuthServiceProtocol
+    private let authService: AuthServiceProtocol
     
     var email = ""
     var password = ""
     var isLoading = false
     var alert: AlertType?
-    var signInSuccess = false
-    var signedInProfile: UserProfile?
-    var requiresProfileSetup = false
-    var userId: String?
     
     // MARK: - Initialization
     init(authService: AuthServiceProtocol = AuthService()) {
@@ -32,8 +27,8 @@ class SignInViewModel {
             defer { isLoading = false }
             
             do {
-                let user = try await authService.signIn(email: email, password: password)
-                await checkProfileAndProceed(userId: user.id)
+                _ = try await authService.signIn(email: email, password: password)
+                // authStateChanges handles navigation
             } catch let error as Auth.AuthError {
                 if case .invalidCredentials = error.errorCode {
                     alert = .error(String(localized: "error.auth.invalid_credentials"))
@@ -42,18 +37,15 @@ class SignInViewModel {
                 }
             } catch {
                 alert = .error(String(localized: "error.generic.unknown"))
-
             }
         }
     }
     
     func signInWithApple() {
-        // TODO: Implement Apple Sign In
         Task { await performSocialAuth(provider: .apple) }
     }
     
     func signInWithGoogle() {
-        // TODO: Implement Google Sign In
         Task { await performSocialAuth(provider: .google) }
     }
     
@@ -62,22 +54,8 @@ class SignInViewModel {
         defer { isLoading = false }
         
         do {
-            let user = try await authService.signInWithSocial(provider: provider)
-            await checkProfileAndProceed(userId: user.id)
-        } catch {
-            alert = .error(String(localized: "error.generic.unknown"))
-        }
-    }
-    
-    private func checkProfileAndProceed(userId: UUID) async {
-        self.userId = userId.uuidString
-        do {
-            if let profile = try await authService.getProfile(userId: userId.uuidString) {
-                signedInProfile = profile
-                signInSuccess = true
-            } else {
-                requiresProfileSetup = true
-            }
+            _ = try await authService.signInWithSocial(provider: provider)
+            // authStateChanges handles navigation
         } catch {
             alert = .error(String(localized: "error.generic.unknown"))
         }

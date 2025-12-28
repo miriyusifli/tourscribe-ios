@@ -9,18 +9,25 @@ struct TourscribeApp: App {
             Group {
                 if appViewModel.isLoading {
                     LoadingView()
-                } else {
-                    if let userProfile = appViewModel.userProfile {
-                        MyTrips(user: userProfile)
-                            .transition(.opacity)
-                    } else {
-                        NavigationStack {
-                            SignInView { profile in
-                                appViewModel.userProfile = profile
-                            }
-                        }
+                } else if let userProfile = appViewModel.userProfile {
+                    MyTrips(user: userProfile)
                         .transition(.opacity)
+                } else if appViewModel.requiresProfileSetup,
+                          let userId = appViewModel.sessionUserId,
+                          let email = appViewModel.sessionEmail {
+                    NavigationStack {
+                        ProfileSetupView(
+                            userId: userId,
+                            email: email,
+                            onSetupSuccess: appViewModel.onProfileCreated
+                        )
                     }
+                    .transition(.opacity)
+                } else {
+                    NavigationStack {
+                        SignInView()
+                    }
+                    .transition(.opacity)
                 }
             }
             .preferredColorScheme(.light)

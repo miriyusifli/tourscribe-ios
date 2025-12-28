@@ -5,13 +5,9 @@ import Combine
 
 // MARK: - View State Models
 
-/// Tracks the entire state of the sign-up form and authentication context
 struct SignUpState {
-    var userId: String?
     var email: String = ""
     var password: String = ""
-    
-    var isSocialSignUp: Bool { userId != nil }
 }
 
 @Observable
@@ -24,12 +20,9 @@ class SignUpViewModel {
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Properties
-    var shouldNavigateToProfileSetup = false
-    
     var state = SignUpState() {
         didSet {
             if state.email != oldValue.email {
-                // Reset validation state when user edits email
                 isEmailValid = true
             }
             if state.password != oldValue.password {
@@ -40,7 +33,6 @@ class SignUpViewModel {
     
     var isLoading = false
     var alert: AlertType?
-
     var isEmailValid = false
     var isPasswordValid = false
     
@@ -73,39 +65,26 @@ class SignUpViewModel {
         }
     }
     
-    func signUp(with provider: SocialAuthProvider) {
-        Task { [weak self] in
-            await self?.performSocialAuth(provider: provider)
-        }
-    }
-    
     // MARK: - Authentication Logic
     
-    private func performSocialAuth(provider: SocialAuthProvider) async {
-        await performAsync { [weak self] in
-            guard let self = self else { return }
-            
-            let user = try await self.authService.signInWithSocial(provider: provider)
-            self.handleAuthSuccess(user: user)
-        }
-    }
-    
     private func performAccountCreation() async {
-        await performAsync { [weak self] in
-            guard let self = self else { return }
-            
-            // Strictly Sign Up (New User path)
-            let user = try await self.authService.signUp(email: self.state.email, password: self.state.password)
-            self.handleAuthSuccess(user: user)
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            _ = try await authService.signUp(email: state.email, password: state.password)
+        } catch let error as Auth.AuthError {
+            switch error.errorCode {
+            case .userAlreadyExists:
+                alert = .error(SignUpError.userAlreadyExists.localizedDescription)
+            case .weakPassword:
+                alert = .error(SignUpError.weakPassword.localizedDescription)
+            default:
+                alert = .error(String(localized: "error.generic.unknown"))
+            }
+        } catch {
+            alert = .error(String(localized: "error.generic.unknown"))
         }
-    }
-    
-    private func handleAuthSuccess(user: User) {
-        state.userId = user.id.uuidString
-        if let email = user.email {
-            state.email = email
-        }
-        shouldNavigateToProfileSetup = true
     }
     
     // MARK: - Validation Setup
@@ -124,7 +103,6 @@ class SignUpViewModel {
     // MARK: - Validation Checks
     
     func validateCredentials() -> Bool {
-        // Validate email explicitly on button click
         let isEmailValidNow = ValidationHelper.isValidEmail(email)
         self.isEmailValid = isEmailValidNow
         
@@ -137,21 +115,5 @@ class SignUpViewModel {
             return false
         }
         return true
-    }
-    
-    // MARK: - Helpers
-    
-    /// A generic wrapper that handles loading spinners and error alerts for any task
-    private func performAsync(_ operation: @escaping () async throws -> Void) async {
-        self.isLoading = true
-        defer { self.isLoading = false }
-        
-        do {
-            try await operation()
-        } catch is CancellationError {
-            // Ignore cancellation
-        } catch {
-            self.alert = .error(String(localized: "error.generic.unknown"))
-        }
     }
 }

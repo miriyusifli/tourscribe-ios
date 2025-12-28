@@ -1,11 +1,9 @@
 import SwiftUI
 
-// MARK: - Main Sign-Up View
 @MainActor
 struct SignUpView: View {
     @State private var viewModel = SignUpViewModel()
     @Environment(\.dismiss) private var dismiss
-    var onSignUpSuccess: (UserProfile) -> Void
     
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -31,13 +29,6 @@ struct SignUpView: View {
                 message: Text(alertType.message),
                 dismissButton: .cancel(Text(String(localized: "button.ok")))
             )
-        }
-
-        .navigationDestination(isPresented: $viewModel.shouldNavigateToProfileSetup) {
-            if let userId = viewModel.state.userId {
-                ProfileSetupView(userId: userId, email: viewModel.email, onSetupSuccess: onSignUpSuccess)
-                    .navigationBarBackButtonHidden(true)
-            }
         }
     }
 
@@ -121,5 +112,5 @@ struct SignUpView: View {
 }
 
 #Preview {
-    SignUpView(onSignUpSuccess: { _ in })
+    SignUpView()
 }

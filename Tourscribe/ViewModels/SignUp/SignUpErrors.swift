@@ -3,6 +3,8 @@ import Foundation
 enum SignUpError: LocalizedError {
     case userIdNotFound
     case selfDeallocated
+    case userAlreadyExists
+    case weakPassword
     
     var errorDescription: String? {
         switch self {
@@ -10,6 +12,10 @@ enum SignUpError: LocalizedError {
             return String(localized: "error.signup.userid_missing")
         case .selfDeallocated:
             return String(localized: "error.generic.unknown")
+        case .userAlreadyExists:
+            return String(localized: "error.signup.user_exists")
+        case .weakPassword:
+            return String(localized: "error.signup.weak_password")
         }
     }
 }
