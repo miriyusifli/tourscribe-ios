@@ -4,6 +4,9 @@ import Foundation
 @MainActor
 class UpdateTripItemViewModel {
     private let tripItemService: TripItemServiceProtocol
+    private let tripService: TripServiceProtocol
+    private let tripStore: TripStore
+    private let originalItem: TripItem
     
     let itemType: TripItemType
     var name: String
@@ -22,12 +25,12 @@ class UpdateTripItemViewModel {
     var isLoading = false
     var errorMessage: String?
     var updatedItem: TripItem?
-    
-    private let originalItem: TripItem
 
-    init(tripItem: TripItem, tripItemService: TripItemServiceProtocol = TripItemService()) {
+    init(tripItem: TripItem, tripItemService: TripItemServiceProtocol = TripItemService(), tripService: TripServiceProtocol = TripService(), tripStore: TripStore = .shared) {
         self.originalItem = tripItem
         self.tripItemService = tripItemService
+        self.tripService = tripService
+        self.tripStore = tripStore
         self.itemType = tripItem.itemType
         self.name = tripItem.name
         self.startDateTime = tripItem.startDateTime
@@ -84,12 +87,19 @@ class UpdateTripItemViewModel {
                 metadata: buildMetadata(),
                 locations: locations
             )
-            updatedItem = try await tripItemService.updateTripItem(itemId: originalItem.id, request: request)
+            let item = try await tripItemService.updateTripItem(itemId: originalItem.id, request: request)
+            await refreshTrip()
+            updatedItem = item
         } catch let error as TripItemValidationError {
             errorMessage = error.localizedDescription
         } catch {
             errorMessage = String(localized: "error.generic.unknown")
         }
+    }
+    
+    private func refreshTrip() async {
+        guard let updatedTrip = try? await tripService.fetchTrip(tripId: originalItem.tripId) else { return }
+        tripStore.update(updatedTrip)
     }
     
     private func buildMetadata() -> TripItemMetadata {

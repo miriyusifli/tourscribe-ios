@@ -4,8 +4,7 @@ import Supabase
 class TripService: TripServiceProtocol {
     private let client = SupabaseClientManager.shared.client
     
-    func createTrip(name: String, startDate: Date?, endDate: Date?) async throws -> Trip {
-        let request = try TripCreateRequest(name: name, startDate: startDate, endDate: endDate)
+    func createTrip(request: TripCreateRequest) async throws -> Trip {
         let response = try await client.rpc("create_trip", params: request.toRPCParams()).execute()
         return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
     }
@@ -40,16 +39,27 @@ class TripService: TripServiceProtocol {
         return try JSONDecoders.iso8601.decode([Trip].self, from: response.data)
     }
     
+    func fetchTrip(tripId: Int64) async throws -> Trip {
+        let response = try await client
+            .from("trips")
+            .select()
+            .eq("id", value: String(tripId))
+            .single()
+            .execute()
+        
+        return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
+    }
+    
     func updateTrip(tripId: Int64, request: TripUpdateRequest) async throws -> Trip {
         let response = try await client.rpc("update_trip", params: request.toRPCParams(tripId: tripId)).execute()
         return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
     }
     
-    func deleteTrip(tripId: String) async throws {
+    func deleteTrip(tripId: Int64) async throws {
         try await client
             .from("trips")
             .delete()
-            .eq("id", value: tripId)
+            .eq("id", value: String(tripId))
             .execute()
     }
 }

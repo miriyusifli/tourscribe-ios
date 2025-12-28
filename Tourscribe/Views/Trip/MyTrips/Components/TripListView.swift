@@ -17,9 +17,7 @@ struct TripListView: View {
         }
         .sheet(item: $editingTrip) { trip in
             NavigationStack {
-                UpdateTripView(trip: trip) { updatedTrip in
-                    viewModel.updateTrip(updatedTrip)
-                }
+                UpdateTripView(trip: trip)
             }
         }
         .alert(String(localized: "alert.delete.trip.title", defaultValue: "Delete Trip"), isPresented: .init(
@@ -30,7 +28,7 @@ struct TripListView: View {
             Button(String(localized: "button.delete"), role: .destructive) {
                 if let trip = tripToDelete {
                     Task {
-                        await viewModel.deleteTrip(tripId: String(trip.id))
+                        await viewModel.deleteTrip(tripId: trip.id)
                     }
                 }
             }

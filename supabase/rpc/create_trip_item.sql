@@ -22,6 +22,11 @@ begin
   values (p_trip_id, p_name, p_item_type, p_start_datetime, p_end_datetime, p_metadata)
   returning id into v_item_id;
   
+  update trips set
+    start_date = least(start_date, p_start_datetime::date),
+    end_date = greatest(end_date, p_end_datetime::date)
+  where id = p_trip_id;
+  
   for v_loc in select * from jsonb_array_elements(p_locations)
   loop
     insert into trip_item_locations (trip_item_id, sequence, name, address, latitude, longitude)

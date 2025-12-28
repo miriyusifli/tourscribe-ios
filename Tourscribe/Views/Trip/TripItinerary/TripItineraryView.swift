@@ -9,17 +9,20 @@ struct TripItineraryView: View {
     @State private var itemToDelete: TripItem?
     @State private var isShowingCreateSheet = false
     @State private var showLLMChat = false
-    let trip: Trip
+    private let tripId: Int64
+    private var tripStore = TripStore.shared
     let user: UserProfile
     
+    private var trip: Trip { tripStore.trip(for: tripId)! }
+    
     init(trip: Trip, user: UserProfile) {
-        self.trip = trip
+        self.tripId = trip.id
         self.user = user
         self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id))
     }
     
     init(trip: Trip, user: UserProfile, previewItems: [TripItem]) {
-        self.trip = trip
+        self.tripId = trip.id
         self.user = user
         self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id, previewItems: previewItems))
     }
@@ -48,13 +51,15 @@ struct TripItineraryView: View {
                 FloatingActionButton(action: { isShowingCreateSheet = true })
             }
         }
-        .task { if viewModel.tripItems.isEmpty { await viewModel.fetchTripItems() } }
+        .task { 
+            if viewModel.tripItems.isEmpty { await viewModel.fetchTripItems() }
+        }
         .alert(item: $viewModel.alert) { alert in
             Alert(title: Text(alert.title), message: Text(alert.message), dismissButton: .default(Text(String(localized: "button.ok"))))
         }
         .sheet(isPresented: $isShowingCreateSheet) { 
             NavigationStack {
-                CreateTripItemView(tripId: trip.id) { newItem in
+                CreateTripItemView(tripId: tripId) { newItem in
                     viewModel.addItem(newItem)
                 }
             }

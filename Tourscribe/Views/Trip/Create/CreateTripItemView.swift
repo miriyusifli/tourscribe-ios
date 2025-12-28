@@ -39,7 +39,7 @@ struct CreateTripItemView: View {
             }
         }
         .sheet(isPresented: $isShowingTypeSelector) {
-            TripTypeSelectionView(selectedType: $viewModel.selectedItemType)
+            TripItemTypeSelectionView(selectedType: $viewModel.selectedItemType)
         }
         .sheet(item: $activeLocationSearch) { searchType in
             NavigationView {

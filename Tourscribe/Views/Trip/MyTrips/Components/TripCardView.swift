@@ -6,25 +6,24 @@ struct TripCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: StyleGuide.Spacing.standard) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: StyleGuide.Spacing.medium) {
-                    Text(trip.name)
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundColor(.textPrimary)
-                        .lineLimit(2)
-                    
-                    HStack(spacing: StyleGuide.Spacing.medium) {
-                        Image(systemName: "calendar")
-                            .font(.caption)
-                        Text(formattedDates)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(.textSecondary)
-                }
+                Text(trip.name)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundColor(.textPrimary)
+                    .lineLimit(2)
                 
                 Spacer()
                 statusBadge
             }
+            
+            HStack(spacing: StyleGuide.Spacing.medium) {
+                Image(systemName: "calendar")
+                    .font(.caption)
+                Text(formattedDates)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Spacer()
+            }
+            .foregroundColor(.textSecondary)
         }
         .padding(StyleGuide.Padding.large)
         .background(.ultraThinMaterial)

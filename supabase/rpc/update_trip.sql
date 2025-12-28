@@ -3,9 +3,7 @@
 
 create or replace function update_trip(
   p_trip_id bigint,
-  p_name text,
-  p_start_date date,
-  p_end_date date
+  p_name text
 ) returns json
 language plpgsql
 security definer
@@ -15,8 +13,6 @@ declare
 begin
   update trips
   set name = p_name,
-      start_date = p_start_date,
-      end_date = p_end_date,
       updated_at = now()
   where id = p_trip_id and user_id = auth.uid()
   returning json_build_object(

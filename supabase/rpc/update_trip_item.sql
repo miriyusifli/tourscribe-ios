@@ -24,6 +24,11 @@ begin
       updated_at = now()
   where id = p_item_id;
   
+  update trips set
+    start_date = least(start_date, p_start_datetime::date),
+    end_date = greatest(end_date, p_end_datetime::date)
+  where id = (select trip_id from trip_items where id = p_item_id);
+  
   -- Delete locations not in the new list
   delete from trip_item_locations 
   where trip_item_id = p_item_id 

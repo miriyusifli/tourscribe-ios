@@ -37,13 +37,6 @@ struct MyTrips: View {
         .task(id: viewModel.selectedSegment) {
             await viewModel.fetchTrips(for: viewModel.selectedSegment)
         }
-        .onChange(of: viewModel.isShowingCreateTrip) { _, newValue in
-            if !newValue {
-                Task {
-                    await viewModel.fetchTrips(for: viewModel.selectedSegment)
-                }
-            }
-        }
         .sheet(isPresented: $viewModel.isShowingCreateTrip) {
             NavigationStack {
                 CreateTripView(navigationPath: $navigationPath)

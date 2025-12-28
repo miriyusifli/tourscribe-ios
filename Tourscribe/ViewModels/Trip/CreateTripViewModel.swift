@@ -3,8 +3,6 @@ import Combine
 
 class CreateTripViewModel: ObservableObject {
     @Published var tripName: String = ""
-    @Published var startDate: Date? = nil
-    @Published var endDate: Date? = nil
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var createdTrip: Trip?
@@ -17,24 +15,16 @@ class CreateTripViewModel: ObservableObject {
     
     @MainActor
     func createTrip() async {
-        guard !tripName.isEmpty else {
-            errorMessage = String(localized: "validation.trip.name.empty")
-            return
-        }
-        
-        if let start = startDate, let end = endDate {
-            guard end >= start else {
-                errorMessage = String(localized: "validation.trip.dates.invalid")
-                return
-            }
-        }
-        
         isLoading = true
         errorMessage = nil
         
         do {
-            let trip = try await tripService.createTrip(name: tripName, startDate: startDate, endDate: endDate)
+            let request = try TripCreateRequest(name: tripName)
+            let trip = try await tripService.createTrip(request: request)
+            TripStore.shared.add(trip)
             createdTrip = trip
+        } catch let error as TripValidationError {
+            errorMessage = error.localizedDescription
         } catch {
             errorMessage = String(localized: "error.generic.unknown")
         }

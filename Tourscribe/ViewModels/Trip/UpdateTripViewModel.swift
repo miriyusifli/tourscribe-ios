@@ -4,22 +4,20 @@ import Foundation
 @MainActor
 class UpdateTripViewModel {
     private let tripService: TripServiceProtocol
+    private let tripStore: TripStore
     private let originalTrip: Trip
     
     var name: String
-    var startDate: Date?
-    var endDate: Date?
     
     var isLoading = false
     var errorMessage: String?
     var updatedTrip: Trip?
 
-    init(trip: Trip, tripService: TripServiceProtocol = TripService()) {
+    init(trip: Trip, tripService: TripServiceProtocol = TripService(), tripStore: TripStore = .shared) {
         self.originalTrip = trip
         self.tripService = tripService
+        self.tripStore = tripStore
         self.name = trip.name
-        self.startDate = trip.startDate
-        self.endDate = trip.endDate
     }
     
     func updateTrip() async {
@@ -28,12 +26,10 @@ class UpdateTripViewModel {
         defer { isLoading = false }
         
         do {
-            let request = try TripUpdateRequest(
-                name: name,
-                startDate: startDate,
-                endDate: endDate
-            )
-            updatedTrip = try await tripService.updateTrip(tripId: originalTrip.id, request: request)
+            let request = try TripUpdateRequest(name: name)
+            let trip = try await tripService.updateTrip(tripId: originalTrip.id, request: request)
+            tripStore.update(trip)
+            updatedTrip = trip
         } catch let error as TripValidationError {
             errorMessage = error.localizedDescription
         } catch {

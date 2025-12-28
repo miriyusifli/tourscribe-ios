@@ -4,7 +4,6 @@ struct CreateTripView: View {
     @StateObject private var viewModel = CreateTripViewModel()
     @Environment(\.dismiss) private var dismiss
     @Binding var navigationPath: NavigationPath
-    @State private var showDates: Bool = false
     
     var body: some View {
         AppView {
@@ -39,61 +38,7 @@ struct CreateTripView: View {
                 placeholder: String(localized: "trip.name.placeholder"),
                 text: $viewModel.tripName
             )
-            
-            dateToggle
-            
-            if showDates {
-                datePickers
-            }
         }
-        .animation(.spring(), value: showDates)
-    }
-
-    @ViewBuilder
-    private var dateToggle: some View {
-        Toggle(isOn: $showDates) {
-            Text(String(localized: "label.set_dates"))
-                .font(.body)
-                .foregroundColor(.textPrimary)
-        }
-        .tint(.primaryColor)
-        .padding(.horizontal, StyleGuide.Padding.medium)
-        .padding(.vertical, StyleGuide.Padding.medium)
-        .background(Color.white)
-        .cornerRadius(StyleGuide.CornerRadius.standard)
-        .onChange(of: showDates) { _, newValue in
-            if newValue {
-                viewModel.startDate = Date()
-                viewModel.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
-            } else {
-                viewModel.startDate = nil
-                viewModel.endDate = nil
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var datePickers: some View {
-        VStack(spacing: StyleGuide.Spacing.standard) {
-            CustomDatePicker(
-                title: String(localized: "label.start_date"),
-                selection: Binding(
-                    get: { viewModel.startDate ?? Date() },
-                    set: { viewModel.startDate = $0 }
-                ),
-                displayedComponents: [.date]
-            )
-            
-            CustomDatePicker(
-                title: String(localized: "label.end_date"),
-                selection: Binding(
-                    get: { viewModel.endDate ?? Date() },
-                    set: { viewModel.endDate = $0 }
-                ),
-                displayedComponents: [.date]
-            )
-        }
-        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     @ViewBuilder

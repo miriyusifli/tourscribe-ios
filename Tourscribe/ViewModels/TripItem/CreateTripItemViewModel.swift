@@ -5,6 +5,8 @@ import Foundation
 class CreateTripItemViewModel {
     private let tripId: Int64
     private let tripItemService: TripItemServiceProtocol
+    private let tripService: TripServiceProtocol
+    private let tripStore: TripStore
     
     // Form state
     var name = ""
@@ -30,9 +32,11 @@ class CreateTripItemViewModel {
     var errorMessage: String?
     var createdItem: TripItem? = nil
 
-    init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService()) {
+    init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService(), tripService: TripServiceProtocol = TripService(), tripStore: TripStore = .shared) {
         self.tripId = tripId
         self.tripItemService = tripItemService
+        self.tripService = tripService
+        self.tripStore = tripStore
         self.endDateTime = Calendar.current.date(byAdding: .hour, value: 1, to: self.startDateTime) ?? self.startDateTime
     }
     
@@ -64,6 +68,7 @@ class CreateTripItemViewModel {
                 locations: locations
             )
             let newItem = try await tripItemService.createTripItem(request: request)
+            await refreshTrip()
             self.createdItem = newItem
         } catch let error as TripItemValidationError {
             self.errorMessage = error.localizedDescription
@@ -71,6 +76,11 @@ class CreateTripItemViewModel {
             print(error)
             self.errorMessage = String(localized: "error.generic.unknown")
         }
+    }
+    
+    private func refreshTrip() async {
+        guard let updatedTrip = try? await tripService.fetchTrip(tripId: tripId) else { return }
+        tripStore.update(updatedTrip)
     }
     
     private func buildMetadata() -> TripItemMetadata {

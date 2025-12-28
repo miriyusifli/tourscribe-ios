@@ -3,30 +3,35 @@ import Combine
 
 @MainActor
 class MyTripsViewModel: ObservableObject {
-    @Published var trips: [Trip] = []
     @Published var isLoading: Bool = false
     @Published var alert: AlertType? = nil
     @Published var selectedSegment: TripListSegment = .upcoming
     @Published var isShowingCreateTrip = false
     
     private let tripService: TripServiceProtocol
+    private let tripStore: TripStore
     
-    init(tripService: TripServiceProtocol = TripService()) {
+    var trips: [Trip] { tripStore.trips }
+    
+    init(tripService: TripServiceProtocol = TripService(), tripStore: TripStore = .shared) {
         self.tripService = tripService
+        self.tripStore = tripStore
     }
     
     func fetchTrips(for segment: TripListSegment) async {
-        if trips.isEmpty {
+        if tripStore.trips.isEmpty {
             isLoading = true
         }
         alert = nil
         
         do {
+            let fetchedTrips: [Trip]
             if segment == .upcoming {
-                trips = try await tripService.fetchUpcomingTrips()
+                fetchedTrips = try await tripService.fetchUpcomingTrips()
             } else {
-                trips = try await tripService.fetchPastTrips()
+                fetchedTrips = try await tripService.fetchPastTrips()
             }
+            tripStore.set(fetchedTrips)
         } catch {
             let nsError = error as NSError
             if nsError.code != NSURLErrorCancelled && !Task.isCancelled {
@@ -37,22 +42,12 @@ class MyTripsViewModel: ObservableObject {
         isLoading = false
     }
     
-    func deleteTrip(tripId: String) async {
-        guard let id = Int64(tripId),
-              let index = trips.firstIndex(where: { $0.id == id }) else { return }
-        
-        let deletedTrip = trips.remove(at: index)
-        
+    func deleteTrip(tripId: Int64) async {
         do {
             try await tripService.deleteTrip(tripId: tripId)
+            tripStore.remove(tripId)
         } catch {
-            trips.insert(deletedTrip, at: min(index, trips.count))
             alert = .error(String(localized: "error.trip.delete_failed"))
         }
-    }
-    
-    func updateTrip(_ trip: Trip) {
-        guard let index = trips.firstIndex(where: { $0.id == trip.id }) else { return }
-        trips[index] = trip
     }
 }

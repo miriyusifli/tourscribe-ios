@@ -1,7 +1,7 @@
 import SwiftUI
 
 
-struct TripTypeSelectionView: View {
+struct TripItemTypeSelectionView: View {
     @Binding var selectedType: TripItemType
     @Environment(\.dismiss) private var dismiss
     
