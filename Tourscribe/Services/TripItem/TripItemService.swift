@@ -38,8 +38,12 @@ class TripItemService: TripItemServiceProtocol {
 
     func updateTripItem(itemId: Int64, request: TripItemUpdateRequest) async throws -> TripItem {
         let params = request.toRPCParams(itemId: itemId)
-        let response = try await client.rpc("update_trip_item", params: params).execute()
-        return try JSONDecoders.iso8601.decode(TripItem.self, from: response.data)
+        do {
+            let response = try await client.rpc("update_trip_item", params: params).execute()
+            return try JSONDecoders.iso8601.decode(TripItem.self, from: response.data)
+        } catch let error where error.localizedDescription.contains("VERSION_CONFLICT") {
+            throw OptimisticLockError.versionConflict
+        }
     }
 
     func deleteTripItem(itemId: Int64) async throws {

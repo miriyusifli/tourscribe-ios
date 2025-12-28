@@ -73,8 +73,12 @@ class TripService: TripServiceProtocol {
     }
     
     func updateTrip(tripId: Int64, request: TripUpdateRequest) async throws -> Trip {
-        let response = try await client.rpc("update_trip", params: request.toRPCParams(tripId: tripId)).execute()
-        return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
+        do {
+            let response = try await client.rpc("update_trip", params: request.toRPCParams(tripId: tripId)).execute()
+            return try JSONDecoders.iso8601.decode(Trip.self, from: response.data)
+        } catch let error where error.localizedDescription.contains("VERSION_CONFLICT") {
+            throw OptimisticLockError.versionConflict
+        }
     }
     
     func deleteTrip(tripId: Int64) async throws {

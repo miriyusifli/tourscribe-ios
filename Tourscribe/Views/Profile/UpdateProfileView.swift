@@ -67,6 +67,7 @@ struct EditProfileView: View {
             birthDate: Date(),
             gender: "Male",
             interests: [],
+            version: 0,
             createdAt: Date(),
             updatedAt: Date()
         ),

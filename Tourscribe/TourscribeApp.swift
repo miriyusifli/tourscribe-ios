@@ -15,10 +15,8 @@ struct TourscribeApp: App {
                             .transition(.opacity)
                     } else {
                         NavigationStack {
-                            SignInView {
-                                withAnimation {
-                                    appViewModel.checkSession()
-                                }
+                            SignInView { profile in
+                                appViewModel.userProfile = profile
                             }
                         }
                         .transition(.opacity)

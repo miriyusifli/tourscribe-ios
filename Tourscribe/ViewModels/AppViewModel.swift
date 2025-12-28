@@ -13,20 +13,22 @@ class AppViewModel {
     
     init(authService: AuthServiceProtocol = AuthService()) {
         self.authService = authService
-        checkSession()
+        Task { await checkSession() }
+        listenForAuthChanges()
     }
     
-    func checkSession() {
-        Task {
-            if let session = await authService.session {
-                if let profile = try? await authService.getProfile(userId: session.user.id.uuidString) {
-                    userProfile = profile
-                    isLoggedIn = true
-                }
+    func checkSession() async {
+        if let session = await authService.session {
+            if let profile = try? await authService.getProfile(userId: session.user.id.uuidString) {
+                userProfile = profile
+                isLoggedIn = true
             }
-            isLoading = false
-            
-            // Listen for logout events
+        }
+        isLoading = false
+    }
+    
+    private func listenForAuthChanges() {
+        Task {
             for await (event, _) in authService.authStateChanges {
                 if event == .signedOut {
                     userProfile = nil

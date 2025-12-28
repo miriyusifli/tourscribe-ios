@@ -31,7 +31,8 @@ class UpdateProfileViewModel: ObservableObject {
                 firstName: firstName,
                 lastName: lastName,
                 birthDate: birthDate,
-                gender: gender
+                gender: gender,
+                version: user.version
             )
         } catch {
             alert = .error(error.localizedDescription)
@@ -50,12 +51,16 @@ class UpdateProfileViewModel: ObservableObject {
                     birthDate: birthDate,
                     gender: gender,
                     interests: user.interests,
+                    version: user.version + 1,
                     createdAt: user.createdAt,
                     updatedAt: Date()
                 )
                 isLoading = false
                 onUpdate?(updatedProfile)
             } catch let error as ProfileValidationError {
+                isLoading = false
+                alert = .error(error.localizedDescription)
+            } catch let error as OptimisticLockError {
                 isLoading = false
                 alert = .error(error.localizedDescription)
             } catch {

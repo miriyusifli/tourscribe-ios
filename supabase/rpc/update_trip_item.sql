@@ -1,6 +1,6 @@
--- Updates a trip item and its locations atomically
+-- Updates a trip item and its locations atomically with optimistic locking
 -- Returns the complete trip item with locations as JSON
--- Requires: UNIQUE constraint on trip_item_locations(trip_item_id, sequence)
+-- Raises exception on version conflict
 
 create or replace function update_trip_item(
   p_item_id bigint,
@@ -8,21 +8,29 @@ create or replace function update_trip_item(
   p_start_datetime timestamptz,
   p_end_datetime timestamptz,
   p_metadata jsonb,
-  p_locations jsonb
+  p_locations jsonb,
+  p_version int
 ) returns json
 language plpgsql
 security definer
 as $$
 declare
   v_result json;
+  v_updated_count int;
 begin
   update trip_items
   set name = p_name,
       start_datetime = p_start_datetime,
       end_datetime = p_end_datetime,
       metadata = p_metadata,
+      version = version + 1,
       updated_at = now()
-  where id = p_item_id;
+  where id = p_item_id and version = p_version;
+  
+  get diagnostics v_updated_count = row_count;
+  if v_updated_count = 0 then
+    raise exception 'VERSION_CONFLICT';
+  end if;
   
   update trips set
     start_date = least(start_date, p_start_datetime::date),
@@ -59,6 +67,7 @@ begin
     'start_datetime', ti.start_datetime,
     'end_datetime', ti.end_datetime,
     'metadata', ti.metadata,
+    'version', ti.version,
     'created_at', ti.created_at,
     'updated_at', ti.updated_at,
     'trip_item_locations', coalesce(

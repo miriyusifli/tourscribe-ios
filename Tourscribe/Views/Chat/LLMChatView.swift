@@ -175,5 +175,5 @@ struct LLMChatView: View {
 }
 
 #Preview {
-    LLMChatView(tripId: 1, user: UserProfile(id: "", email: "", firstName: "", lastName: "", birthDate: Date(), gender: "", interests: [], createdAt: Date(), updatedAt: Date()))
+    LLMChatView(tripId: 1, user: UserProfile(id: "", email: "", firstName: "", lastName: "", birthDate: Date(), gender: "", interests: [],version:0, createdAt: Date(), updatedAt: Date()))
 }

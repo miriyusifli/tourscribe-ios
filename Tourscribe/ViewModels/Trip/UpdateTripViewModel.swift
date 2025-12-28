@@ -26,11 +26,13 @@ class UpdateTripViewModel {
         defer { isLoading = false }
         
         do {
-            let request = try TripUpdateRequest(name: name)
+            let request = try TripUpdateRequest(name: name, version: originalTrip.version)
             let trip = try await tripService.updateTrip(tripId: originalTrip.id, request: request)
             tripStore.update(trip)
             updatedTrip = trip
         } catch let error as TripValidationError {
+            errorMessage = error.localizedDescription
+        } catch let error as OptimisticLockError {
             errorMessage = error.localizedDescription
         } catch {
             errorMessage = String(localized: "error.generic.unknown")

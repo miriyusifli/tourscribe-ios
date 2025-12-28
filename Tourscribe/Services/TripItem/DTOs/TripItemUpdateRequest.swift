@@ -10,6 +10,7 @@ struct TripItemUpdateRequest {
     let endDateTime: Date
     let metadata: TripItemMetadata
     let locations: [Location]
+    let version: Int
     
     private static func isValidName(_ name: String) -> Bool {
         name.allSatisfy { $0.isLetter || $0.isNumber || $0.isWhitespace || $0 == "-" }
@@ -21,7 +22,8 @@ struct TripItemUpdateRequest {
         startDateTime: Date,
         endDateTime: Date,
         metadata: TripItemMetadata,
-        locations: [Location]
+        locations: [Location],
+        version: Int
     ) throws {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw TripItemValidationError.nameRequired
@@ -46,6 +48,7 @@ struct TripItemUpdateRequest {
         self.endDateTime = endDateTime
         self.metadata = metadata
         self.locations = locations
+        self.version = version
     }
     
     private static func validateMetadata(_ metadata: TripItemMetadata, for itemType: TripItemType) throws {
@@ -74,7 +77,8 @@ struct TripItemUpdateRequest {
             "p_start_datetime": .string(iso8601Formatter.string(from: startDateTime)),
             "p_end_datetime": .string(iso8601Formatter.string(from: endDateTime)),
             "p_metadata": metadata.toAnyJSON(),
-            "p_locations": .array(locations.map { $0.toAnyJSON() })
+            "p_locations": .array(locations.map { $0.toAnyJSON() }),
+            "p_version": .integer(version)
         ]
     }
 }

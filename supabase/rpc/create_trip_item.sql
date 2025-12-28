@@ -48,6 +48,7 @@ begin
     'start_datetime', ti.start_datetime,
     'end_datetime', ti.end_datetime,
     'metadata', ti.metadata,
+    'version', ti.version,
     'created_at', ti.created_at,
     'updated_at', ti.updated_at,
     'trip_item_locations', coalesce(

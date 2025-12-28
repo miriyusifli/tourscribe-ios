@@ -15,6 +15,7 @@ class SignInViewModel {
     var isLoading = false
     var alert: AlertType?
     var signInSuccess = false
+    var signedInProfile: UserProfile?
     var requiresProfileSetup = false
     var userId: String?
     
@@ -71,7 +72,8 @@ class SignInViewModel {
     private func checkProfileAndProceed(userId: UUID) async {
         self.userId = userId.uuidString
         do {
-            if let _ = try await authService.getProfile(userId: userId.uuidString) {
+            if let profile = try await authService.getProfile(userId: userId.uuidString) {
+                signedInProfile = profile
                 signInSuccess = true
             } else {
                 requiresProfileSetup = true

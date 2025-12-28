@@ -8,15 +8,11 @@ struct Location: Identifiable, Codable, Hashable {
     let address: String?
     let latitude: Double
     let longitude: Double
+    let version: Int
     
     enum CodingKeys: String, CodingKey {
-        case id
+        case id, sequence, name, address, latitude, longitude, version
         case tripItemId = "trip_item_id"
-        case sequence
-        case name
-        case address
-        case latitude
-        case longitude
     }
     
     // Convenience init for creating new locations (before DB insert)
@@ -28,6 +24,7 @@ struct Location: Identifiable, Codable, Hashable {
         self.address = address
         self.latitude = latitude
         self.longitude = longitude
+        self.version = 0
     }
     
     func withSequence(_ sequence: Int) -> Location {

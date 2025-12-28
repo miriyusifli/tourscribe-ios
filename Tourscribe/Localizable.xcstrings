@@ -505,6 +505,18 @@
         }
       }
     },
+    "error.optimistic_lock.version_conflict" : {
+      "comment" : "Error message when data was modified by another session.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This data was modified. Please refresh and try again."
+          }
+        }
+      }
+    },
     "error.signup.userid_missing" : {
       "comment" : "Error description for when the user ID is not found during a signup process.",
       "extractionState" : "manual",

@@ -266,10 +266,11 @@ struct TripItineraryView: View {
             name: "Germany Trip",
             startDate: Date(),
             endDate: Date().addingTimeInterval(86400 * 7),
+            version: 0,
             createdAt: Date(),
             updatedAt: nil
         ),
-        user: UserProfile(id: "", email: "", firstName: "", lastName: "", birthDate: Date(), gender: "", interests: [], createdAt: Date(), updatedAt: Date()),
+        user: UserProfile(id: "", email: "", firstName: "", lastName: "", birthDate: Date(), gender: "", interests: [], version:0, createdAt: Date(), updatedAt: Date()),
         previewItems: previewItems
     )
 }

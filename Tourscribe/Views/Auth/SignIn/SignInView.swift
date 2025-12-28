@@ -3,7 +3,7 @@ import SwiftUI
 struct SignInView: View {
     @State private var viewModel = SignInViewModel()
     @Environment(\.dismiss) private var dismiss
-    var onSignInSuccess: () -> Void
+    var onSignInSuccess: (UserProfile) -> Void
     
     var body: some View {
         AppView {
@@ -32,8 +32,8 @@ struct SignInView: View {
             )
         }
         .onChange(of: viewModel.signInSuccess) { _, success in
-            if success {
-                onSignInSuccess()
+            if success, let profile = viewModel.signedInProfile {
+                onSignInSuccess(profile)
             }
         }
         .navigationDestination(isPresented: $viewModel.requiresProfileSetup) {
@@ -123,5 +123,5 @@ struct SignInView: View {
 }
 
 #Preview {
-    SignInView(onSignInSuccess: {})
+    SignInView(onSignInSuccess: { _ in })
 }

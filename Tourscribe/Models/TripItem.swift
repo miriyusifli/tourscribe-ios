@@ -49,12 +49,13 @@ struct TripItem: Identifiable, Codable, Hashable {
     var startDateTime: Date
     var endDateTime: Date
     var metadata: TripItemMetadata
+    let version: Int
     let createdAt: Date
     var updatedAt: Date?
     var locations: [Location]
 
     enum CodingKeys: String, CodingKey {
-        case id, name, metadata
+        case id, name, metadata, version
         case tripId = "trip_id"
         case itemType = "item_type"
         case startDateTime = "start_datetime"
@@ -72,6 +73,7 @@ struct TripItem: Identifiable, Codable, Hashable {
         startDateTime: Date,
         endDateTime: Date,
         metadata: TripItemMetadata,
+        version: Int = 0,
         createdAt: Date = Date(),
         updatedAt: Date? = nil,
         locations: [Location] = []
@@ -96,6 +98,7 @@ struct TripItem: Identifiable, Codable, Hashable {
         self.startDateTime = startDateTime
         self.endDateTime = endDateTime
         self.metadata = metadata
+        self.version = version
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.locations = locations
@@ -128,6 +131,7 @@ struct TripItem: Identifiable, Codable, Hashable {
         itemType = try container.decode(TripItemType.self, forKey: .itemType)
         startDateTime = try container.decode(Date.self, forKey: .startDateTime)
         endDateTime = try container.decode(Date.self, forKey: .endDateTime)
+        version = try container.decode(Int.self, forKey: .version)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
         
@@ -161,6 +165,7 @@ struct TripItem: Identifiable, Codable, Hashable {
         try container.encode(itemType, forKey: .itemType)
         try container.encode(startDateTime, forKey: .startDateTime)
         try container.encode(endDateTime, forKey: .endDateTime)
+        try container.encode(version, forKey: .version)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
         

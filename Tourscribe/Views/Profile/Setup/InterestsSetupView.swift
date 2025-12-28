@@ -2,7 +2,7 @@ import SwiftUI
 
 struct InterestsSetupView: View {
     @Bindable var viewModel: ProfileSetupViewModel
-    var onSetupSuccess: () -> Void
+    var onSetupSuccess: (UserProfile) -> Void
     
     var body: some View {
         VStack(spacing: StyleGuide.Spacing.xlarge) {
@@ -24,8 +24,8 @@ struct InterestsSetupView: View {
             )
         }
         .onChange(of: viewModel.setupSuccess) { _, success in
-            if success {
-                onSetupSuccess()
+            if success, let profile = viewModel.createdProfile {
+                onSetupSuccess(profile)
             }
         }
     }

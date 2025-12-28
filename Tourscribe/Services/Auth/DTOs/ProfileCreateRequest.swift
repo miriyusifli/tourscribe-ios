@@ -1,4 +1,5 @@
 import Foundation
+import Supabase
 
 struct ProfileCreateRequest: Codable {
     let id: String
@@ -51,5 +52,17 @@ struct ProfileCreateRequest: Codable {
         self.birthDate = birthDate
         self.gender = gender
         self.interests = interests
+    }
+    
+    func toRPCParams() -> [String: AnyJSON] {
+        [
+            "p_id": .string(id),
+            "p_email": .string(email),
+            "p_first_name": .string(firstName),
+            "p_last_name": .string(lastName),
+            "p_birth_date": .string(DateFormatters.iso8601Date.string(from: birthDate)),
+            "p_gender": .string(gender),
+            "p_interests": .array(interests.map { .string($0) })
+        ]
     }
 }

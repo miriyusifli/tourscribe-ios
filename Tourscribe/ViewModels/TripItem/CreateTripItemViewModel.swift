@@ -73,7 +73,6 @@ class CreateTripItemViewModel {
         } catch let error as TripItemValidationError {
             self.errorMessage = error.localizedDescription
         } catch {
-            print(error)
             self.errorMessage = String(localized: "error.generic.unknown")
         }
     }

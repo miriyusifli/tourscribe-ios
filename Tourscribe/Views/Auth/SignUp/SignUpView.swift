@@ -5,7 +5,7 @@ import SwiftUI
 struct SignUpView: View {
     @State private var viewModel = SignUpViewModel()
     @Environment(\.dismiss) private var dismiss
-    var onSignUpSuccess: () -> Void
+    var onSignUpSuccess: (UserProfile) -> Void
     
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -121,5 +121,5 @@ struct SignUpView: View {
 }
 
 #Preview {
-    SignUpView(onSignUpSuccess: {})
+    SignUpView(onSignUpSuccess: { _ in })
 }

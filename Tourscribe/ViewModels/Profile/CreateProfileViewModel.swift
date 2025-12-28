@@ -19,6 +19,8 @@ class ProfileSetupViewModel {
     var alert: AlertType?
     var setupSuccess = false
     
+    var createdProfile: UserProfile?
+    
     // Navigation State
     var navigateToInterests = false
     
@@ -76,7 +78,7 @@ class ProfileSetupViewModel {
             defer { isLoading = false }
             
             do {
-                try await authService.createProfile(data: request)
+                createdProfile = try await authService.createProfile(data: request)
                 setupSuccess = true
             } catch {
                 alert = .error(String(localized: "error.generic.unknown"))

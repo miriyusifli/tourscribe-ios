@@ -2,9 +2,9 @@ import SwiftUI
 
 struct ProfileSetupView: View {
     @State private var viewModel: ProfileSetupViewModel
-    var onSetupSuccess: () -> Void
+    var onSetupSuccess: (UserProfile) -> Void
     
-    init(userId: String, email: String, onSetupSuccess: @escaping () -> Void) {
+    init(userId: String, email: String, onSetupSuccess: @escaping (UserProfile) -> Void) {
         self._viewModel = State(initialValue: ProfileSetupViewModel(userId: userId, email: email))
         self.onSetupSuccess = onSetupSuccess
     }

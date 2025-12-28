@@ -85,12 +85,15 @@ class UpdateTripItemViewModel {
                 startDateTime: startDateTime,
                 endDateTime: endDateTime,
                 metadata: buildMetadata(),
-                locations: locations
+                locations: locations,
+                version: originalItem.version
             )
             let item = try await tripItemService.updateTripItem(itemId: originalItem.id, request: request)
             await refreshTrip()
             updatedItem = item
         } catch let error as TripItemValidationError {
+            errorMessage = error.localizedDescription
+        } catch let error as OptimisticLockError {
             errorMessage = error.localizedDescription
         } catch {
             errorMessage = String(localized: "error.generic.unknown")
