@@ -28,10 +28,6 @@ class TripItemService: TripItemServiceProtocol {
     }
 
     func deleteTripItem(itemId: Int64) async throws {
-        try await client
-            .from("trip_items")
-            .delete()
-            .eq("id", value: String(itemId))
-            .execute()
+        try await client.rpc("delete_trip_item", params: ["p_item_id": itemId]).execute()
     }
 }

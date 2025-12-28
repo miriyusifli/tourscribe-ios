@@ -5,20 +5,26 @@ import SwiftUI
 class TripItemViewModel {
     private let tripId: Int64
     private let tripItemService: TripItemServiceProtocol
+    private let tripService: TripServiceProtocol
+    private let tripStore: TripStore
     private let calendar = Calendar.current
     
     var tripItems: [TripItem] = []
     var isLoading = false
     var alert: AlertType? = nil
     
-    init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService()) {
+    init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService(), tripService: TripServiceProtocol = TripService(), tripStore: TripStore = .shared) {
         self.tripId = tripId
         self.tripItemService = tripItemService
+        self.tripService = tripService
+        self.tripStore = tripStore
     }
     
     init(tripId: Int64, previewItems: [TripItem]) {
         self.tripId = tripId
         self.tripItemService = TripItemService()
+        self.tripService = TripService()
+        self.tripStore = .shared
         self.tripItems = previewItems
         self.isLoading = false
     }
@@ -85,9 +91,15 @@ class TripItemViewModel {
         
         do {
             try await tripItemService.deleteTripItem(itemId: itemId)
+            await refreshTrip()
         } catch {
             tripItems.insert(deletedItem, at: min(index, tripItems.count))
             alert = .error(String(localized: "error.trip_item.delete_failed"))
         }
+    }
+    
+    private func refreshTrip() async {
+        guard let updatedTrip = try? await tripService.fetchTrip(tripId: tripId) else { return }
+        tripStore.update(updatedTrip)
     }
 }
