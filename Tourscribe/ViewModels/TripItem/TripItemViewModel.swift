@@ -103,16 +103,6 @@ class TripItemViewModel {
         isLoadingMore = false
     }
     
-    func addItem(_ item: TripItem) {
-        let index = tripItems.firstIndex { $0.startDateTime > item.startDateTime } ?? tripItems.endIndex
-        tripItems.insert(item, at: index)
-    }
-    
-    func updateItem(_ item: TripItem) {
-        guard let index = tripItems.firstIndex(where: { $0.id == item.id }) else { return }
-        tripItems[index] = item
-    }
-    
     func deleteTripItem(itemId: Int64) async {
         guard let index = tripItems.firstIndex(where: { $0.id == itemId }) else { return }
         let deletedItem = tripItems.remove(at: index)

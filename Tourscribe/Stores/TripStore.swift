@@ -21,13 +21,24 @@ class TripStore {
     }
     
     func add(_ trip: Trip) {
-        trips.insert(trip, at: 0)
+        let tripDate = trip.startDate ?? .distantFuture
+        var low = 0
+        var high = trips.count
+        while low < high {
+            let mid = (low + high) / 2
+            if (trips[mid].startDate ?? .distantFuture) < tripDate {
+                low = mid + 1
+            } else {
+                high = mid
+            }
+        }
+        trips.insert(trip, at: low)
     }
     
     func update(_ trip: Trip) {
-        if let index = trips.firstIndex(where: { $0.id == trip.id }) {
-            trips[index] = trip
-        }
+        guard let index = trips.firstIndex(where: { $0.id == trip.id }) else { return }
+        trips.remove(at: index)
+        add(trip)
     }
     
     func remove(_ tripId: Int64) {

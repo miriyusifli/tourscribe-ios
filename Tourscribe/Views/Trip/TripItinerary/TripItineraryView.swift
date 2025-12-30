@@ -80,18 +80,18 @@ struct TripItineraryView: View {
         .alert(item: $viewModel.alert) { alert in
             Alert(title: Text(alert.title), message: Text(alert.message), dismissButton: .default(Text(String(localized: "button.ok"))))
         }
-        .sheet(isPresented: $isShowingCreateSheet) { 
+        .sheet(isPresented: $isShowingCreateSheet, onDismiss: {
+            Task { await viewModel.fetchTripItems() }
+        }) { 
             NavigationStack {
-                CreateTripItemView(tripId: tripId) { newItem in
-                    viewModel.addItem(newItem)
-                }
+                CreateTripItemView(tripId: tripId)
             }
         }
-        .sheet(item: $editingItem) { item in
+        .sheet(item: $editingItem, onDismiss: {
+            Task { await viewModel.fetchTripItems() }
+        }) { item in
             NavigationStack {
-                UpdateTripItemView(tripItem: item) { updatedItem in
-                    viewModel.updateItem(updatedItem)
-                }
+                UpdateTripItemView(tripItem: item)
             }
         }
         .alert(String(localized: "alert.delete.item.title", defaultValue: "Delete Item"), isPresented: .init(
