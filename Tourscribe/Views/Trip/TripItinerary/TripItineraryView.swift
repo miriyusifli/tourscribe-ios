@@ -156,6 +156,10 @@ struct TripItineraryView: View {
         } else {
             ForEach(viewModel.itemsByDate, id: \.date) { dayGroup in
                 Section {
+                    if let activeAccommodation = viewModel.activeAccommodation(for: dayGroup.date) {
+                        ActiveAccommodationBanner(name: activeAccommodation.location?.name ?? activeAccommodation.name)
+                    }
+                    
                     ForEach(dayGroup.items) { displayItem in
                         TimelineItemView(displayItem: displayItem, onEdit: {
                             editingItem = displayItem.item
@@ -169,14 +173,8 @@ struct TripItineraryView: View {
                         }
                     }
                 } header: {
-                    VStack(alignment: .leading, spacing: StyleGuide.Spacing.large) {
-                        DaySectionHeaderView(date: dayGroup.date)
-                        
-                        if let activeAccommodation = viewModel.activeAccommodation(for: dayGroup.date) {
-                            ActiveAccommodationBanner(name: activeAccommodation.location?.name ?? activeAccommodation.name)
-                        }
-                    }
-                    .padding(.bottom, StyleGuide.Padding.standard)
+                    DaySectionHeaderView(date: dayGroup.date)
+                        .padding(.bottom, StyleGuide.Padding.standard)
                 }
             }
             
