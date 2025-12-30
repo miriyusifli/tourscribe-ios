@@ -23,7 +23,7 @@ class TripService: TripServiceProtocol {
             .from("trips")
             .select()
             .eq("user_id", value: userId)
-            .or("start_date.gte.\(nowStr),start_date.is.null")
+            .or("end_date.gte.\(nowStr),end_date.is.null")
         
         if let cursor = cursor {
             if let cursorDate = cursor.startDate {
@@ -33,7 +33,7 @@ class TripService: TripServiceProtocol {
         }
         
         let response = try await query
-            .order("start_date", ascending: true)
+            .order("start_date", ascending: true, nullsFirst: false)
             .order("id", ascending: true)
             .limit(limit + 1)
             .execute()
@@ -49,7 +49,8 @@ class TripService: TripServiceProtocol {
             .from("trips")
             .select()
             .eq("user_id", value: userId)
-            .lt("start_date", value: nowStr)
+            .not("end_date", operator: .is, value: "null")
+            .lt("end_date", value: nowStr)
         
         if let cursor = cursor {
             if let cursorDate = cursor.startDate {
