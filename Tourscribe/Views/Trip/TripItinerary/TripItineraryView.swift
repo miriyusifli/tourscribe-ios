@@ -41,6 +41,19 @@ struct TripItineraryView: View {
                 } else {
                     headerSection
                         .padding(.horizontal, StyleGuide.Padding.large)
+                        .background(alignment: .bottom) {
+                            ZStack {
+                                AsyncImage(url: URL(string: trip.imgUrl)) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } placeholder: {
+                                    Color.clear
+                                }
+                                Color.black.opacity(0.35)
+                            }
+                            .ignoresSafeArea(edges: .top)
+                        }
                     actionButtons
                         .padding(.horizontal, StyleGuide.Padding.standard)
                     
@@ -103,14 +116,15 @@ struct TripItineraryView: View {
         VStack(alignment: .leading, spacing: StyleGuide.Spacing.medium) {
             Text(trip.name)
                 .font(StyleGuide.Typography.largeTitle)
-                .foregroundStyle(Color.textPrimary)
+                .foregroundStyle(Color.white)
             
             Label(tripDates, systemImage: "calendar")
                 .font(.subheadline)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.white)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, StyleGuide.Padding.xxlarge)
+        .padding(.top, StyleGuide.Padding.large)
+        .padding(.bottom, StyleGuide.Padding.xxlarge)
     }
     
     @ViewBuilder
@@ -264,6 +278,7 @@ struct TripItineraryView: View {
             id: 30,
             userId: UUID(),
             name: "Germany Trip",
+            imgUrl: "asdasd",
             startDate: Date(),
             endDate: Date().addingTimeInterval(86400 * 7),
             version: 0,

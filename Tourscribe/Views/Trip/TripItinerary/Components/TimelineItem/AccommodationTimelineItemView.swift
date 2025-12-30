@@ -21,10 +21,10 @@ struct AccommodationTimelineItemView: View {
     }
     
     var body: some View {
-        BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) { isExpanded in
+        BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) {
             checkInOutSection
             if let location = item.location {
-                SingleLocationView(location: location, isExpanded: isExpanded, backgroundColor: item.itemType.lighterColor)
+                LocationRowView(location: location, iconColor: item.itemType.color)
             }
         }
     }
@@ -65,4 +65,24 @@ struct AccommodationTimelineItemView: View {
         }
         .frame(maxWidth: .infinity)
     }
+}
+
+
+#Preview {
+    AccommodationTimelineItemView(
+        item: try! TripItem(
+            id: 1,
+            tripId: 1,
+            name: "Hotel Bayerischer Hof",
+            itemType: .accommodation,
+            startDateTime: Date(),
+            endDateTime: Date().addingTimeInterval(86400 * 3),
+            metadata: .accommodation(AccommodationMetadata()),
+            locations: [Location(sequence: 0, name: "Hotel Bayerischer Hof", address: "Promenadeplatz 2-6, 80333 Munich", latitude: 48.1397, longitude: 11.5735)]
+        ),
+        displayDate: Date(),
+        onEdit: {},
+        onDelete: {}
+    )
+    .padding()
 }

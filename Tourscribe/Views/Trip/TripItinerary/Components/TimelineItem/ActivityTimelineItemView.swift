@@ -6,17 +6,36 @@ struct ActivityTimelineItemView: View {
     var onDelete: () -> Void
     
     var body: some View {
-        BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) { isExpanded in
-            if let location = item.location {
-                SingleLocationView(location: location, isExpanded: isExpanded, backgroundColor: item.itemType.lighterColor)
+        BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) {
+            HStack {
+                Text("\(DateFormatters.shortTime.string(from: item.startDateTime)) - \(DateFormatters.shortTime.string(from: item.endDateTime))")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Spacer()
             }
-            if isExpanded { metadataView }
+            Divider()
+            if let location = item.location {
+                LocationRowView(location: location, iconColor: item.itemType.color)
+            }
         }
     }
-    
-    @ViewBuilder
-    private var metadataView: some View {
-        // TODO: Add activity-specific metadata display when ActivityMetadata properties are defined
-        EmptyView()
-    }
+}
+
+
+#Preview {
+    ActivityTimelineItemView(
+        item: try! TripItem(
+            id: 1,
+            tripId: 1,
+            name: "Visit Marienplatz",
+            itemType: .activity,
+            startDateTime: Date(),
+            endDateTime: Date().addingTimeInterval(7200),
+            metadata: .activity(ActivityMetadata()),
+            locations: [Location(sequence: 0, name: "Marienplatz", address: "Marienplatz, 80331 Munich", latitude: 48.1374, longitude: 11.5755)]
+        ),
+        onEdit: {},
+        onDelete: {}
+    )
+    .padding()
 }

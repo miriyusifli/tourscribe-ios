@@ -8,7 +8,7 @@ class TripItemService: TripItemServiceProtocol {
         
         var query = client
             .from("trip_items")
-            .select("id, trip_id, name, item_type, start_datetime, end_datetime, metadata, created_at, updated_at, trip_item_locations(*)")
+            .select("id, trip_id, name, item_type, start_datetime, end_datetime, metadata, version, created_at, updated_at, trip_item_locations(*)")
             .eq("trip_id", value: String(tripId))
         
         if let cursor = cursor {

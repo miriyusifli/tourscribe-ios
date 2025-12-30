@@ -5,87 +5,102 @@ struct TransportTimelineItemView: View {
     var onEdit: () -> Void
     var onDelete: () -> Void
     
-    private var transportData: TransportMetadata? {
-        if case .transport(let data) = item.metadata { return data }
-        return nil
+    private var transportData: TransportMetadata {
+        guard case .transport(let data) = item.metadata else {
+            fatalError("TransportTimelineItemView requires transport metadata")
+        }
+        return data
     }
     
     var body: some View {
-        BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) { _ in
-            routeSection
+        BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) {
+            timeRow
+            Divider()
+            routeRow
         }
     }
     
     @ViewBuilder
-    private var routeSection: some View {
+    private var timeRow: some View {
         if let dep = item.departureLocation, let arr = item.arrivalLocation {
-            HStack(spacing: StyleGuide.Spacing.standard) {
-                // Departure
+            HStack(alignment: .center) {
                 VStack(spacing: StyleGuide.Spacing.small) {
                     Text(DateFormatters.shortTime.string(from: item.startDateTime))
-                        .font(.title3.weight(.bold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                     Text(dep.name)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity)
                 
-                // Route path with vehicle number and carrier
                 VStack(spacing: StyleGuide.Spacing.small) {
-                    if let vehicleNumber = transportData?.vehicleNumber {
-                        Text(vehicleNumber)
-                            .font(.caption.weight(.bold).monospaced())
-                            .foregroundStyle(item.itemType.color)
-                    }
-                    
-                    HStack(spacing: StyleGuide.Spacing.routePath) {
+                    Text(transportData.vehicleNumber ?? "")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(item.itemType.color)
+                    HStack(spacing: 0) {
                         Circle()
                             .fill(item.itemType.color)
-                            .frame(width: StyleGuide.Dimensions.routeDotSize, height: StyleGuide.Dimensions.routeDotSize)
-                        
+                            .frame(width: 6, height: 6)
                         Rectangle()
-                            .fill(item.itemType.color.opacity(0.3))
-                            .frame(height: StyleGuide.Dimensions.routeLineHeight)
-                        
+                            .fill(item.itemType.color)
+                            .frame(height: 1)
                         Image(systemName: "bus.fill")
-                            .font(.caption.weight(.semibold))
+                            .font(.caption)
                             .foregroundStyle(item.itemType.color)
-                        
                         Rectangle()
-                            .fill(item.itemType.color.opacity(0.3))
-                            .frame(height: StyleGuide.Dimensions.routeLineHeight)
-                        
+                            .fill(item.itemType.color)
+                            .frame(height: 1)
                         Circle()
                             .fill(item.itemType.color)
-                            .frame(width: StyleGuide.Dimensions.routeDotSize, height: StyleGuide.Dimensions.routeDotSize)
+                            .frame(width: 6, height: 6)
                     }
-                    
-                    if let carrier = transportData?.carrier {
-                        Text(carrier)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(transportData.carrier ?? "")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 
-                // Arrival
                 VStack(spacing: StyleGuide.Spacing.small) {
                     Text(DateFormatters.shortTime.string(from: item.endDateTime))
-                        .font(.title3.weight(.bold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                     Text(arr.name)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity)
             }
-            .padding(StyleGuide.Padding.standard)
-            .background(Color.lightGray)
-            .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.small, style: .continuous))
         }
     }
+    
+    @ViewBuilder
+    private var routeRow: some View {
+        if let dep = item.departureLocation {
+            LocationRowView(location: dep, iconColor: item.itemType.color)
+        }
+    }
+}
+
+
+#Preview {
+    TransportTimelineItemView(
+        item: try! TripItem(
+            id: 1,
+            tripId: 1,
+            name: "Train to Neuschwanstein",
+            itemType: .transport,
+            startDateTime: Date(),
+            endDateTime: Date().addingTimeInterval(7200),
+            metadata: .transport(TransportMetadata(carrier: "Deutsche Bahn", vehicleNumber: "RE 57432")),
+            locations: [
+                Location(sequence: 0, name: "Munich Hauptbahnhof", address: "Munich Central Station", latitude: 48.1403, longitude: 11.5600),
+                Location(sequence: 1, name: "Füssen Station", address: "Füssen, Germany", latitude: 47.5692, longitude: 10.7008)
+            ]
+        ),
+        onEdit: {},
+        onDelete: {}
+    )
+    .padding()
 }

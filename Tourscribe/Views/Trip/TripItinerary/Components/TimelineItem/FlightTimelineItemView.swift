@@ -13,81 +13,94 @@ struct FlightTimelineItemView: View {
     }
     
     var body: some View {
-        BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) { _ in
-            routeSection
+        BaseTimelineItemView(item: item, onEdit: onEdit, onDelete: onDelete) {
+            timeRow
+            Divider()
+            routeRow
         }
     }
     
     @ViewBuilder
-    private var routeSection: some View {
+    private var timeRow: some View {
         if let dep = item.departureLocation, let arr = item.arrivalLocation {
-            VStack(spacing: StyleGuide.Spacing.none) {
-                // Times and route line - always aligned
-                HStack(spacing: StyleGuide.Spacing.standard) {
+            HStack(alignment: .center) {
+                VStack(spacing: StyleGuide.Spacing.small) {
                     Text(DateFormatters.shortTime.string(from: item.startDateTime))
-                        .font(.title3.weight(.bold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity)
-                    
-                    VStack(spacing: StyleGuide.Spacing.small) {
-                        Text(flightData.flightNumber)
-                            .font(.caption.weight(.bold).monospaced())
-                            .foregroundStyle(item.itemType.color)
-                        
-                        HStack(spacing: StyleGuide.Spacing.routePath) {
-                            Circle()
-                                .fill(item.itemType.color)
-                                .frame(width: StyleGuide.Dimensions.routeDotSize, height: StyleGuide.Dimensions.routeDotSize)
-                            
-                            Rectangle()
-                                .fill(item.itemType.color.opacity(0.3))
-                                .frame(height: StyleGuide.Dimensions.routeLineHeight)
-                            
-                            Image(systemName: "airplane")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(item.itemType.color)
-                            
-                            Rectangle()
-                                .fill(item.itemType.color.opacity(0.3))
-                                .frame(height: StyleGuide.Dimensions.routeLineHeight)
-                            
-                            Circle()
-                                .fill(item.itemType.color)
-                                .frame(width: StyleGuide.Dimensions.routeDotSize, height: StyleGuide.Dimensions.routeDotSize)
-                        }
-                        
-                        Text(flightData.airline)
+                    Text(dep.name)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                
+                VStack(spacing: StyleGuide.Spacing.small) {
+                    Text(flightData.flightNumber)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(item.itemType.color)
+                    HStack(spacing: 0) {
+                        Circle()
+                            .fill(item.itemType.color)
+                            .frame(width: 6, height: 6)
+                        Rectangle()
+                            .fill(item.itemType.color)
+                            .frame(height: 1)
+                        Image(systemName: "airplane")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(item.itemType.color)
+                        Rectangle()
+                            .fill(item.itemType.color)
+                            .frame(height: 1)
+                        Circle()
+                            .fill(item.itemType.color)
+                            .frame(width: 6, height: 6)
                     }
-                    
-                    Text(DateFormatters.shortTime.string(from: item.endDateTime))
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity)
+                    Text(flightData.airline)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 
-                // Location names - can grow independently
-                HStack(alignment: .top, spacing: StyleGuide.Spacing.standard) {
-                    Text(dep.name)
-                        .font(.subheadline)
+                VStack(spacing: StyleGuide.Spacing.small) {
+                    Text(DateFormatters.shortTime.string(from: item.endDateTime))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                    
-                    Spacer()
-                        .frame(width: 80)
-                    
                     Text(arr.name)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
                 }
+                .frame(maxWidth: .infinity)
             }
-            .padding(StyleGuide.Padding.standard)
-            .background(Color.lightGray)
-            .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.small, style: .continuous))
         }
     }
+    
+    @ViewBuilder
+    private var routeRow: some View {
+        if let dep = item.departureLocation {
+            LocationRowView(location: dep, iconColor: item.itemType.color)
+        }
+    }
+}
+
+
+#Preview {
+    FlightTimelineItemView(
+        item: try! TripItem(
+            id: 1,
+            tripId: 1,
+            name: "Flight to Munich",
+            itemType: .flight,
+            startDateTime: Date(),
+            endDateTime: Date().addingTimeInterval(9000),
+            metadata: .flight(FlightMetadata(airline: "Lufthansa", flightNumber: "LH123")),
+            locations: [
+                Location(sequence: 0, name: "JFK International", address: "New York, USA", latitude: 40.6413, longitude: -73.7781),
+                Location(sequence: 1, name: "Munich Airport", address: "Munich, Germany", latitude: 48.3537, longitude: 11.7750)
+            ]
+        ),
+        onEdit: {},
+        onDelete: {}
+    )
+    .padding()
 }

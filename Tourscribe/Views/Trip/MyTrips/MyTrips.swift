@@ -51,3 +51,18 @@ struct MyTrips: View {
         }
     }
 }
+
+#Preview {
+    MyTrips(user: UserProfile(
+        id: UUID().uuidString,
+        email: "test@example.com",
+        firstName: "John",
+        lastName: "Doe",
+        birthDate: Date(),
+        gender: "male",
+        interests: [],
+        version: 1,
+        createdAt: Date(),
+        updatedAt: Date()
+    ))
+}
