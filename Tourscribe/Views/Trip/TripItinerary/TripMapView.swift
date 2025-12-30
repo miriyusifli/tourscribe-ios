@@ -2,47 +2,45 @@ import SwiftUI
 import MapKit
 
 struct TripMapView: View {
-    let tripItems: [TripItem]
+    let itemsByDate: [(date: Date, items: [TimelineDisplayItem])]
     let tripName: String
-    @State private var selectedItemId: Int64?
+    @State private var selectedDisplayItemId: String?
     @State private var selectedDate: Date
     @State private var mapPosition: MapCameraPosition = .automatic
     
     private let calendar = Calendar.current
     
     private var availableDates: [Date] {
-        let dates = Set(tripItems.map { calendar.startOfDay(for: $0.startDateTime) })
-        return dates.sorted()
+        itemsByDate.map { $0.date }
     }
     
-    private var filteredItems: [TripItem] {
-        tripItems.filter { calendar.isDate($0.startDateTime, inSameDayAs: selectedDate) }
+    private var filteredDisplayItems: [TimelineDisplayItem] {
+        itemsByDate.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }?.items ?? []
     }
     
     private var annotations: [TripMapAnnotation] {
-        filteredItems.flatMap { item in
-            item.locations.map { location in
+        filteredDisplayItems.flatMap { displayItem in
+            displayItem.item.locations.map { location in
                 TripMapAnnotation(
                     coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
                     title: location.name,
-                    itemType: item.itemType,
-                    itemId: item.id
+                    itemType: displayItem.item.itemType,
+                    displayItemId: displayItem.id
                 )
             }
         }
     }
     
-    private var selectedItem: TripItem? {
-        tripItems.first { $0.id == selectedItemId }
+    private var selectedDisplayItem: TimelineDisplayItem? {
+        filteredDisplayItems.first { $0.id == selectedDisplayItemId }
     }
     
-    init(tripItems: [TripItem], tripName: String) {
-        self.tripItems = tripItems
+    init(itemsByDate: [(date: Date, items: [TimelineDisplayItem])], tripName: String) {
+        self.itemsByDate = itemsByDate
         self.tripName = tripName
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let dates = Set(tripItems.map { calendar.startOfDay(for: $0.startDateTime) })
-        self._selectedDate = State(initialValue: dates.contains(today) ? today : dates.sorted().first ?? today)
+        let today = Calendar.current.startOfDay(for: Date())
+        let dates = itemsByDate.map { $0.date }
+        self._selectedDate = State(initialValue: dates.contains(today) ? today : dates.first ?? today)
     }
     
     var body: some View {
@@ -50,7 +48,7 @@ struct TripMapView: View {
             mapView
             selectedItemCard
         }
-        .animation(.easeInOut(duration: 0.25), value: selectedItemId)
+        .animation(.easeInOut(duration: 0.25), value: selectedDisplayItemId)
         .navigationTitle(tripName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -62,20 +60,20 @@ struct TripMapView: View {
             dayPicker
         }
         .onChange(of: selectedDate) { _, _ in
-            selectedItemId = nil
+            selectedDisplayItemId = nil
             zoomToFitAnnotations()
         }
     }
     
     @ViewBuilder
     private var mapView: some View {
-        Map(position: $mapPosition, selection: $selectedItemId) {
+        Map(position: $mapPosition, selection: $selectedDisplayItemId) {
             UserAnnotation()
             
             ForEach(annotations) { annotation in
                 Marker(annotation.title, systemImage: annotation.itemType.icon, coordinate: annotation.coordinate)
                     .tint(annotation.itemType.color)
-                    .tag(annotation.itemId)
+                    .tag(annotation.displayItemId)
             }
         }
         .mapStyle(.standard(pointsOfInterest: .excludingAll))
@@ -109,8 +107,8 @@ struct TripMapView: View {
     
     @ViewBuilder
     private var selectedItemCard: some View {
-        if let item = selectedItem {
-            TimelineItemView(item: item, displayDate: item.startDateTime, onEdit: {}, onDelete: {})
+        if let displayItem = selectedDisplayItem {
+            TimelineItemView(displayItem: displayItem, onEdit: {}, onDelete: {})
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(.ultraThinMaterial)
@@ -118,7 +116,7 @@ struct TripMapView: View {
                 .shadow(radius: 10)
                 .padding()
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .onTapGesture { selectedItemId = nil }
+                .onTapGesture { selectedDisplayItemId = nil }
         }
     }
     
@@ -159,7 +157,7 @@ struct TripMapAnnotation: Identifiable, Hashable {
     let coordinate: CLLocationCoordinate2D
     let title: String
     let itemType: TripItemType
-    let itemId: Int64
+    let displayItemId: String
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -253,7 +251,16 @@ struct TripMapAnnotation: Identifiable, Hashable {
         return try! decoder.decode([TripItem].self, from: json.data(using: .utf8)!)
     }()
     
+    let itemsByDate: [(date: Date, items: [TimelineDisplayItem])] = {
+        let grouped = previewItems.reduce(into: [Date: [TimelineDisplayItem]]()) { result, item in
+            for displayItem in TimelineDisplayItem.from(item) {
+                result[displayItem.displayDate, default: []].append(displayItem)
+            }
+        }
+        return grouped.sorted { $0.key < $1.key }.map { ($0.key, $0.value.sorted { $0.sortTime < $1.sortTime }) }
+    }()
+    
     NavigationStack {
-        TripMapView(tripItems: previewItems, tripName: "Germany Trip")
+        TripMapView(itemsByDate: itemsByDate, tripName: "Germany Trip")
     }
 }

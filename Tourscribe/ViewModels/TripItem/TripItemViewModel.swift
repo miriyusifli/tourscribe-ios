@@ -36,24 +36,17 @@ class TripItemViewModel {
         self.isLoading = false
     }
     
-    /// Groups trip items by date. Accommodations appear on check-in and check-out days.
-    var itemsByDate: [(date: Date, items: [TripItem])] {
-        var grouped: [Date: [TripItem]] = [:]
-        
-        for item in tripItems {
-            let startDay = calendar.startOfDay(for: item.startDateTime)
-            grouped[startDay, default: []].append(item)
-            
-            // For accommodations, also add to check-out day
-            if item.itemType == .accommodation {
-                let endDay = calendar.startOfDay(for: item.endDateTime)
-                if endDay != startDay {
-                    grouped[endDay, default: []].append(item)
-                }
+    /// Groups trip items by date. Accommodations appear as separate check-in/check-out cards.
+    var itemsByDate: [(date: Date, items: [TimelineDisplayItem])] {
+        let grouped = tripItems.reduce(into: [Date: [TimelineDisplayItem]]()) { result, item in
+            for displayItem in TimelineDisplayItem.from(item) {
+                result[displayItem.displayDate, default: []].append(displayItem)
             }
         }
         
-        return grouped.sorted { $0.key < $1.key }.map { ($0.key, $0.value) }
+        return grouped
+            .sorted { $0.key < $1.key }
+            .map { ($0.key, $0.value.sorted { $0.sortTime < $1.sortTime }) }
     }
     
     /// Returns the active accommodation for a given date (staying overnight, not check-in or check-out day)

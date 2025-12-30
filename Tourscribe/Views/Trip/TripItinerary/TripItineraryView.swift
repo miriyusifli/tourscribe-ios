@@ -134,7 +134,7 @@ struct TripItineraryView: View {
                 showLLMChat = true
             }
             NavigationLink {
-                TripMapView(tripItems: viewModel.tripItems, tripName: trip.name)
+                TripMapView(itemsByDate: viewModel.itemsByDate, tripName: trip.name)
             } label: {
                 HeaderButtonLabel(icon: "map.fill", title: String(localized:"button.map_view"), iconColor: .green)
             }
@@ -156,14 +156,14 @@ struct TripItineraryView: View {
         } else {
             ForEach(viewModel.itemsByDate, id: \.date) { dayGroup in
                 Section {
-                    ForEach(dayGroup.items) { item in
-                        TimelineItemView(item: item, displayDate: dayGroup.date, onEdit: {
-                            editingItem = item
+                    ForEach(dayGroup.items) { displayItem in
+                        TimelineItemView(displayItem: displayItem, onEdit: {
+                            editingItem = displayItem.item
                         }, onDelete: {
-                            itemToDelete = item
+                            itemToDelete = displayItem.item
                         })
                         .onAppear {
-                            if item.id == viewModel.tripItems.last?.id {
+                            if displayItem.item.id == viewModel.tripItems.last?.id {
                                 Task { await viewModel.loadMore() }
                             }
                         }
