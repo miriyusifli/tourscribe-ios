@@ -22,7 +22,5 @@ struct DaySectionHeaderView: View {
         .padding(.vertical, StyleGuide.Padding.small)
         .background(isToday ? Color.primaryColor : Color.lightGray)
         .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: StyleGuide.CornerRadius.standard, topTrailingRadius: StyleGuide.CornerRadius.standard))
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, -StyleGuide.Padding.large)
     }
 }

@@ -4,10 +4,13 @@ struct ActiveAccommodationBanner: View {
     let name: String
     
     var body: some View {
-        Label(name, systemImage: "moon.zzz.fill")
-            .font(.caption)
-            .lineLimit(1)
-            .foregroundStyle(.secondary)
-            .padding(.leading, StyleGuide.Padding.small)
+        HStack(spacing: StyleGuide.Spacing.small) {
+            Image(systemName: "moon.zzz.fill")
+            Text(name)
+                .lineLimit(3)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .padding(.leading, StyleGuide.Padding.small)
     }
 }

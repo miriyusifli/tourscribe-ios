@@ -49,7 +49,7 @@ class TripItemViewModel {
             .map { ($0.key, $0.value.sorted { $0.sortTime < $1.sortTime }) }
     }
     
-    /// Returns the active accommodation for a given date (staying overnight, not check-in or check-out day)
+    /// Returns the active accommodation for a given date (check-in day through last night, not check-out day)
     func activeAccommodation(for date: Date) -> TripItem? {
         let dayStart = calendar.startOfDay(for: date)
         
@@ -59,8 +59,8 @@ class TripItemViewModel {
             let checkInDay = calendar.startOfDay(for: item.startDateTime)
             let checkOutDay = calendar.startOfDay(for: item.endDateTime)
             
-            // Show on days after check-in but before check-out (not on check-in/check-out days)
-            return dayStart > checkInDay && dayStart < checkOutDay
+            // Show on check-in day and days staying, but not on check-out day
+            return dayStart >= checkInDay && dayStart < checkOutDay
         }
     }
     
