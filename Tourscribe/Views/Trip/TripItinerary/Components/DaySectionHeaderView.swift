@@ -14,10 +14,7 @@ struct DaySectionHeaderView: View {
             Text(DateFormatters.dayOfWeek.string(from: date))
                 .fontWeight(.semibold)
             Text(DateFormatters.shortDate.string(from: date))
-            if isToday {
-                Text(String(localized: "label.today"))
-                    .fontWeight(.bold)
-            }
+
         }
         .font(.subheadline)
         .foregroundStyle(isToday ? Color.white : Color.textPrimary)
