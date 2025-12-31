@@ -45,6 +45,8 @@ struct TripItineraryView: View {
                             ZStack {
                                 if let url = URL(string: trip.imgUrl) {
                                     CachedImage(url: url, size: CGSize(width: UIScreen.main.bounds.width, height: 300))
+                                        .frame(height: 300, alignment: .top)
+                                        .clipped()
                                 } else {
                                     Color.clear
                                 }
