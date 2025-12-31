@@ -3,30 +3,35 @@ import SwiftUI
 struct TripCardView: View {
     let trip: Trip
     
-    private var daysUntilTrip: Int? {
-        guard let startDate = trip.startDate else { return nil }
-        return Calendar.current.dateComponents([.day], from: Date(), to: startDate).day
-    }
-    
-    @ViewBuilder
-    private func tripLabel(days: Int) -> some View {
-        let isOnTrip = days <= 0
-        let text: String = {
-            if isOnTrip { return String(localized: "On Trip") }
+    private func tripLabelText() -> String {
+        if trip.isOngoing { return String(localized: "On Trip") }
+        if trip.isPast, let days = trip.daysSinceEnd {
+            if days == 0 { return String(localized: "Ended today") }
+            if days <= 30 { return String(localized: "\(days) \(days == 1 ? "day" : "days") ago") }
+            let months = days / 30
+            if months < 12 { return String(localized: "\(months) \(months == 1 ? "month" : "months") ago") }
+            let years = months / 12
+            return String(localized: "\(years) \(years == 1 ? "year" : "years") ago")
+        }
+        if let days = trip.daysUntilStart {
             if days <= 30 { return String(localized: "In \(days) \(days == 1 ? "day" : "days")") }
             let months = days / 30
             if months < 12 { return String(localized: "In \(months) \(months == 1 ? "month" : "months")") }
             let years = months / 12
             return String(localized: "In \(years) \(years == 1 ? "year" : "years")")
-        }()
-        
+        }
+        return ""
+    }
+    
+    @ViewBuilder
+    private func tripLabel() -> some View {
         HStack(spacing: 6) {
-            if isOnTrip {
+            if trip.isOngoing {
                 Circle()
                     .fill(Color.green)
                     .frame(width: 8, height: 8)
             }
-            Text(text)
+            Text(tripLabelText())
         }
         .font(.subheadline)
         .fontWeight(.medium)
@@ -92,10 +97,7 @@ struct TripCardView: View {
                 .padding(12)
             }
             
-            // Days Until Trip Label
-            if let days = daysUntilTrip {
-                tripLabel(days: days)
-            }
+            tripLabel()
         }
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }

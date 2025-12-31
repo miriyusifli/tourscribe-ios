@@ -20,4 +20,31 @@ struct Trip: Identifiable, Codable, Hashable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
+    
+    var daysUntilStart: Int? {
+        guard let startDate else { return nil }
+        return Calendar.current.dateComponents([.day], from: Date(), to: startDate).day
+    }
+    
+    var isOngoing: Bool {
+        guard let start = startDate, let end = endDate else { return false }
+        let now = Date()
+        return now >= start && now <= end
+    }
+    
+    var isPast: Bool {
+        guard let endDate else { return false }
+        return Date() > endDate
+    }
+    
+    var isFuture: Bool {
+        guard let startDate else { return false }
+        return Date() < startDate
+    }
+    
+    var daysSinceEnd: Int? {
+        guard let endDate else { return nil }
+        guard let days = Calendar.current.dateComponents([.day], from: endDate, to: Date()).day else { return nil }
+        return max(0, days)
+    }
 }
