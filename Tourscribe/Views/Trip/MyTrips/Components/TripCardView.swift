@@ -58,6 +58,7 @@ struct TripCardView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 300)
                 .clipped()
+                .saturation(trip.isPast ? 0 : 1)
                 
                 // Glass Footer
                 HStack {
