@@ -48,17 +48,17 @@ struct TripCardView: View {
         ZStack(alignment: .topLeading) {
             ZStack(alignment: .bottom) {
                 // Background Image
-                AsyncImage(url: URL(string: trip.imgUrl)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
+                if let url = URL(string: trip.imgUrl) {
+                    CachedImage(url: url, size: CGSize(width: 400, height: 300))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 300)
+                        .clipped()
+                        .saturation(trip.isPast ? 0 : 1)
+                } else {
                     Color.gray.opacity(0.3)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 300)
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 300)
-                .clipped()
-                .saturation(trip.isPast ? 0 : 1)
                 
                 // Glass Footer
                 HStack {

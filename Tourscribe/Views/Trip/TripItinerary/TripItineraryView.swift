@@ -43,11 +43,9 @@ struct TripItineraryView: View {
                         .padding(.horizontal, StyleGuide.Padding.large)
                         .background(alignment: .bottom) {
                             ZStack {
-                                AsyncImage(url: URL(string: trip.imgUrl)) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                } placeholder: {
+                                if let url = URL(string: trip.imgUrl) {
+                                    CachedImage(url: url, size: CGSize(width: UIScreen.main.bounds.width, height: 300))
+                                } else {
                                     Color.clear
                                 }
                                 Color.black.opacity(0.35)
