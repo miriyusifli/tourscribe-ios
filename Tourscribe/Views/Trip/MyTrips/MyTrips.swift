@@ -41,6 +41,7 @@ struct MyTrips: View {
             NavigationStack {
                 CreateTripView(navigationPath: $navigationPath)
             }
+            .presentationDetents([.fraction(0.35)])
         }
         .alert(item: $viewModel.alert) { alert in
             Alert(

@@ -24,6 +24,7 @@ struct TripListView: View {
             NavigationStack {
                 UpdateTripView(trip: trip)
             }
+            .presentationDetents([.fraction(0.35)])
         }
         .alert(String(localized: "alert.delete.trip.title", defaultValue: "Delete Trip"), isPresented: .init(
             get: { tripToDelete != nil },
