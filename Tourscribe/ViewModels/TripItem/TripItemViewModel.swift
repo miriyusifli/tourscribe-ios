@@ -34,13 +34,13 @@ class TripItemViewModel {
         }
     }
     
-    init(tripId: Int64, previewItems: [TripItem]) {
+    init(tripId: Int64, items: [TripItem]) {
         self.tripId = tripId
         self.tripItemService = TripItemService()
         self.tripService = TripService()
         self.tripStore = .shared
         self.store = .shared
-        store.setItems(previewItems, for: tripId, hasMore: false)
+        store.setItems(items, for: tripId, hasMore: false)
     }
     
     var itemsByDate: [(date: Date, items: [TimelineDisplayItem])] {

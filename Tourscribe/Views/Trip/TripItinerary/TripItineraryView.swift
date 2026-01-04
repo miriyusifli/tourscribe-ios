@@ -21,10 +21,10 @@ struct TripItineraryView: View {
         self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id))
     }
     
-    init(trip: Trip, user: UserProfile, previewItems: [TripItem]) {
+    init(trip: Trip, user: UserProfile, items: [TripItem]) {
         self.tripId = trip.id
         self.user = user
-        self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id, previewItems: previewItems))
+        self._viewModel = State(initialValue: TripItemViewModel(tripId: trip.id, items: items))
     }
     
     private var tripDates: String {
@@ -195,7 +195,7 @@ struct TripItineraryView: View {
 // MARK: - Preview
 
 #Preview {
-    let previewItems: [TripItem] = {
+    let items: [TripItem] = {
         let json = """
         [
             {
@@ -290,6 +290,6 @@ struct TripItineraryView: View {
             updatedAt: nil
         ),
         user: UserProfile(id: "", email: "", firstName: "", lastName: "", birthDate: Date(), gender: "", interests: [], version:0, createdAt: Date(), updatedAt: Date()),
-        previewItems: previewItems
+        items: items
     )
 }
