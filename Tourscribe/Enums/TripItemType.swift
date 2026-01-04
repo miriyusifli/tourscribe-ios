@@ -36,6 +36,26 @@ enum TripItemType: String, Codable, CaseIterable, Hashable {
         color.opacity(0.05)
     }
     
+    var localizedName: String {
+        switch self {
+        case .flight: return String(localized: "trip_item.type.flight")
+        case .accommodation: return String(localized: "trip_item.type.accommodation")
+        case .activity: return String(localized: "trip_item.type.activity")
+        case .restaurant: return String(localized: "trip_item.type.restaurant")
+        case .transport: return String(localized: "trip_item.type.transport")
+        }
+    }
+    
+    var localizedDescription: String {
+        switch self {
+        case .flight: return String(localized: "trip_item.type.flight.description")
+        case .accommodation: return String(localized: "trip_item.type.accommodation.description")
+        case .activity: return String(localized: "trip_item.type.activity.description")
+        case .restaurant: return String(localized: "trip_item.type.restaurant.description")
+        case .transport: return String(localized: "trip_item.type.transport.description")
+        }
+    }
+    
     var description: String {
         switch self {
         case .flight:

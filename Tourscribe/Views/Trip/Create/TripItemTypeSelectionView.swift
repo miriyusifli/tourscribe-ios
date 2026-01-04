@@ -1,6 +1,5 @@
 import SwiftUI
 
-
 struct TripItemTypeSelectionView: View {
     @Binding var selectedType: TripItemType
     @Environment(\.dismiss) private var dismiss
@@ -12,15 +11,15 @@ struct TripItemTypeSelectionView: View {
                     selectedType = type
                     dismiss()
                 }) {
-                    HStack(spacing: 16) {
+                    HStack(spacing: StyleGuide.Spacing.large) {
                         Image(systemName: type.icon)
                             .font(.title2)
                             .foregroundColor(type.color)
-                            .frame(width: 40)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(type.rawValue.capitalized)
+                            .frame(width: StyleGuide.IconSize.medium)
+                        VStack(alignment: .leading, spacing: StyleGuide.Spacing.small) {
+                            Text(type.localizedName)
                                 .font(.headline)
-                            Text(type.description)
+                            Text(type.localizedDescription)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -31,16 +30,16 @@ struct TripItemTypeSelectionView: View {
                                 .font(.title2)
                         }
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, StyleGuide.Spacing.medium)
                 }
                 .foregroundColor(.primary)
             }
             .listStyle(.plain)
-            .navigationTitle("Select Item Type")
+            .navigationTitle(String(localized: "trip_item.type.selection.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
+                    Button(String(localized: "button.done")) { dismiss() }
                 }
             }
         }
