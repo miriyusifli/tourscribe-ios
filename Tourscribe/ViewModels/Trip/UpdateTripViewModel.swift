@@ -35,6 +35,7 @@ class UpdateTripViewModel {
         } catch let error as OptimisticLockError {
             errorMessage = error.localizedDescription
         } catch {
+            print(error)
             errorMessage = String(localized: "error.generic.unknown")
         }
     }

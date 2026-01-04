@@ -4,7 +4,8 @@
 create or replace function update_trip(
   p_trip_id bigint,
   p_name text,
-  p_version int
+  p_version int,
+  p_img_url text
 ) returns json
 language plpgsql
 security definer
@@ -14,6 +15,7 @@ declare
 begin
   update trips
   set name = p_name,
+      img_url = p_img_url,
       version = version + 1,
       updated_at = now()
   where id = p_trip_id and user_id = auth.uid() and version = p_version
@@ -21,6 +23,7 @@ begin
     'id', id,
     'user_id', user_id,
     'name', name,
+    'img_url', img_url,
     'start_date', start_date,
     'end_date', end_date,
     'version', version,

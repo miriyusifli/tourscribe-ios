@@ -20,11 +20,12 @@ struct TripUpdateRequest {
         self.version = version
     }
     
-    func toRPCParams(tripId: Int64) -> [String: AnyJSON] {
+    func toRPCParams(tripId: Int64, imgUrl: String) -> [String: AnyJSON] {
         [
             "p_trip_id": .integer(Int(tripId)),
             "p_name": .string(name),
-            "p_version": .integer(version)
+            "p_version": .integer(version),
+            "p_img_url": .string(imgUrl)
         ]
     }
 }
