@@ -14,6 +14,12 @@ extension Location {
         if let address = address {
             dict["address"] = .string(address)
         }
+        if let city = city {
+            dict["city"] = .string(city)
+        }
+        if let country = country {
+            dict["country"] = .string(country)
+        }
         return .object(dict)
     }
 }

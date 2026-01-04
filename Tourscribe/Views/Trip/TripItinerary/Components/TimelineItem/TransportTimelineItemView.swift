@@ -36,7 +36,7 @@ struct TransportTimelineItemView: View {
                 .frame(maxWidth: .infinity)
                 
                 VStack(spacing: StyleGuide.Spacing.small) {
-                    Text(transportData.vehicleNumber ?? "")
+                    Text(transportData.vehicleNumber)
                         .font(.caption.weight(.medium))
                         .foregroundStyle(item.itemType.color)
                     HStack(spacing: 0) {
@@ -56,7 +56,7 @@ struct TransportTimelineItemView: View {
                             .fill(item.itemType.color)
                             .frame(width: 6, height: 6)
                     }
-                    Text(transportData.carrier ?? "")
+                    Text(transportData.carrier)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -81,26 +81,4 @@ struct TransportTimelineItemView: View {
             LocationRowView(location: dep, iconColor: item.itemType.color)
         }
     }
-}
-
-
-#Preview {
-    TransportTimelineItemView(
-        item: try! TripItem(
-            id: 1,
-            tripId: 1,
-            name: "Train to Neuschwanstein",
-            itemType: .transport,
-            startDateTime: Date(),
-            endDateTime: Date().addingTimeInterval(7200),
-            metadata: .transport(TransportMetadata(carrier: "Deutsche Bahn", vehicleNumber: "RE 57432")),
-            locations: [
-                Location(sequence: 0, name: "Munich Hauptbahnhof", address: "Munich Central Station", latitude: 48.1403, longitude: 11.5600),
-                Location(sequence: 1, name: "Füssen Station", address: "Füssen, Germany", latitude: 47.5692, longitude: 10.7008)
-            ]
-        ),
-        onEdit: {},
-        onDelete: {}
-    )
-    .padding()
 }

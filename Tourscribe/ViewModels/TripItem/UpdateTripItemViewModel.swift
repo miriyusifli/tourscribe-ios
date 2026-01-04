@@ -13,9 +13,15 @@ class UpdateTripItemViewModel {
     var startDateTime: Date
     var endDateTime: Date
     
-    var location: Location?
-    var departureLocation: Location?
-    var arrivalLocation: Location?
+    var location: Location? {
+        didSet { updateGeneratedName() }
+    }
+    var departureLocation: Location? {
+        didSet { updateGeneratedName() }
+    }
+    var arrivalLocation: Location? {
+        didSet { updateGeneratedName() }
+    }
     
     var airline: String
     var flightNumber: String
@@ -117,6 +123,17 @@ class UpdateTripItemViewModel {
             return .restaurant(RestaurantMetadata())
         case .transport:
             return .transport(TransportMetadata(carrier: carrier, vehicleNumber: vehicleNumber))
+        }
+    }
+    
+    private func updateGeneratedName() {
+        if let generatedName = TripItemNameGenerator.generateName(
+            for: itemType,
+            location: location,
+            departureLocation: departureLocation,
+            arrivalLocation: arrivalLocation
+        ) {
+            name = generatedName
         }
     }
 }

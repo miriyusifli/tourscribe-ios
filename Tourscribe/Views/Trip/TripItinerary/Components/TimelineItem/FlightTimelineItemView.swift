@@ -82,25 +82,3 @@ struct FlightTimelineItemView: View {
         }
     }
 }
-
-
-#Preview {
-    FlightTimelineItemView(
-        item: try! TripItem(
-            id: 1,
-            tripId: 1,
-            name: "Flight to Munich",
-            itemType: .flight,
-            startDateTime: Date(),
-            endDateTime: Date().addingTimeInterval(9000),
-            metadata: .flight(FlightMetadata(airline: "Lufthansa", flightNumber: "LH123")),
-            locations: [
-                Location(sequence: 0, name: "JFK International", address: "New York, USA", latitude: 40.6413, longitude: -73.7781),
-                Location(sequence: 1, name: "Munich Airport", address: "Munich, Germany", latitude: 48.3537, longitude: 11.7750)
-            ]
-        ),
-        onEdit: {},
-        onDelete: {}
-    )
-    .padding()
-}

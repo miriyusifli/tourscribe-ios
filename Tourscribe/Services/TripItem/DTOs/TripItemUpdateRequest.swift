@@ -13,7 +13,7 @@ struct TripItemUpdateRequest {
     let version: Int
     
     private static func isValidName(_ name: String) -> Bool {
-        name.allSatisfy { $0.isLetter || $0.isNumber || $0.isWhitespace || $0 == "-" }
+        name.allSatisfy { $0.isLetter || $0.isNumber || $0.isWhitespace || $0 == "-" || $0 == "→" || $0 == "," || $0 == "." || $0 == "&" || $0 == "/" || $0 == "'" }
     }
     
     init(

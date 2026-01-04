@@ -70,9 +70,9 @@ struct UpdateTripItemView: View {
 
     private var coreDetailsSection: some View {
         VStack(spacing: StyleGuide.Spacing.large) {
-            CustomTextField(placeholder: String(localized: "trip_item.field.name"), text: $viewModel.name)
-            
             locationSection
+            
+            CustomTextField(placeholder: String(localized: "trip_item.field.name"), text: $viewModel.name)
             
             CustomDatePicker(
                 title: String(localized: viewModel.itemType == .accommodation ? "trip_item.field.check_in_time" : "trip_item.field.start_time"),

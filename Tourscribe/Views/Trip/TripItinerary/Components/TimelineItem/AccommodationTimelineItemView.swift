@@ -35,23 +35,3 @@ struct AccommodationTimelineItemView: View {
         }
     }
 }
-
-
-#Preview {
-    AccommodationTimelineItemView(
-        item: try! TripItem(
-            id: 1,
-            tripId: 1,
-            name: "Hotel Bayerischer Hof",
-            itemType: .accommodation,
-            startDateTime: Date(),
-            endDateTime: Date().addingTimeInterval(86400 * 3),
-            metadata: .accommodation(AccommodationMetadata()),
-            locations: [Location(sequence: 0, name: "Hotel Bayerischer Hof", address: "Promenadeplatz 2-6, 80333 Munich", latitude: 48.1397, longitude: 11.5735)]
-        ),
-        displayMode: .checkIn,
-        onEdit: {},
-        onDelete: {}
-    )
-    .padding()
-}

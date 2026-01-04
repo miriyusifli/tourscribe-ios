@@ -29,12 +29,14 @@ begin
   
   for v_loc in select * from jsonb_array_elements(p_locations)
   loop
-    insert into trip_item_locations (trip_item_id, sequence, name, address, latitude, longitude)
+    insert into trip_item_locations (trip_item_id, sequence, name, address, city, country, latitude, longitude)
     values (
       v_item_id,
       (v_loc->>'sequence')::int,
       v_loc->>'name',
       v_loc->>'address',
+      v_loc->>'city',
+      v_loc->>'country',
       (v_loc->>'latitude')::double precision,
       (v_loc->>'longitude')::double precision
     );

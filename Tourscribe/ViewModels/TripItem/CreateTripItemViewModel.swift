@@ -15,11 +15,17 @@ class CreateTripItemViewModel {
     var endDateTime = Date()
     
     // Single location (for accommodation, restaurant, activity)
-    var location: Location? = nil
+    var location: Location? = nil {
+        didSet { updateGeneratedName() }
+    }
     
     // Multi-location (for flight, transport)
-    var departureLocation: Location? = nil
-    var arrivalLocation: Location? = nil
+    var departureLocation: Location? = nil {
+        didSet { updateGeneratedName() }
+    }
+    var arrivalLocation: Location? = nil {
+        didSet { updateGeneratedName() }
+    }
     
     // Metadata properties
     var airline = ""
@@ -94,6 +100,17 @@ class CreateTripItemViewModel {
             return .restaurant(RestaurantMetadata())
         case .transport:
             return .transport(TransportMetadata(carrier: carrier, vehicleNumber: vehicleNumber))
+        }
+    }
+    
+    private func updateGeneratedName() {
+        if let generatedName = TripItemNameGenerator.generateName(
+            for: selectedItemType,
+            location: location,
+            departureLocation: departureLocation,
+            arrivalLocation: arrivalLocation
+        ) {
+            name = generatedName
         }
     }
 }

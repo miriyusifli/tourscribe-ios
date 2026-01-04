@@ -43,12 +43,14 @@ begin
     and sequence not in (select (value->>'sequence')::int from jsonb_array_elements(p_locations));
   
   -- Upsert locations
-  insert into trip_item_locations (trip_item_id, sequence, name, address, latitude, longitude)
+  insert into trip_item_locations (trip_item_id, sequence, name, address, city, country, latitude, longitude)
   select 
     p_item_id,
     (value->>'sequence')::int,
     value->>'name',
     value->>'address',
+    value->>'city',
+    value->>'country',
     (value->>'latitude')::double precision,
     (value->>'longitude')::double precision
   from jsonb_array_elements(p_locations)
@@ -56,6 +58,8 @@ begin
   do update set 
     name = excluded.name,
     address = excluded.address,
+    city = excluded.city,
+    country = excluded.country,
     latitude = excluded.latitude,
     longitude = excluded.longitude;
   

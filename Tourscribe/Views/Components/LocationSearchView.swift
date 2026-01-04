@@ -79,6 +79,8 @@ struct LocationSearchView: View {
                     sequence: 0,
                     name: mapItem.name ?? "Unknown Location",
                     address: placemark.formattedAddress,
+                    city: placemark.locality,
+                    country: placemark.country,
                     latitude: placemark.coordinate.latitude,
                     longitude: placemark.coordinate.longitude
                 )

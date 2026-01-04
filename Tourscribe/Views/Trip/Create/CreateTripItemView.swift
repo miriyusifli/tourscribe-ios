@@ -76,8 +76,6 @@ struct CreateTripItemView: View {
 
     private var coreDetailsSection: some View {
         VStack(spacing: StyleGuide.Spacing.large) {
-            CustomTextField(placeholder: String(localized: "trip_item.field.name"), text: $viewModel.name)
-            
             HStack {
                 Text(String(localized: "trip_item.field.type"))
                     .font(.body)
@@ -100,6 +98,8 @@ struct CreateTripItemView: View {
             .cornerRadius(StyleGuide.CornerRadius.standard)
             
             locationSection
+            
+            CustomTextField(placeholder: String(localized: "trip_item.field.name"), text: $viewModel.name)
             
             CustomDatePicker(
                 title: String(localized: viewModel.selectedItemType == .accommodation ? "trip_item.field.check_in_time" : "trip_item.field.start_time"),

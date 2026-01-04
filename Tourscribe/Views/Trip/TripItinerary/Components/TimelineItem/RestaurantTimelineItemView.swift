@@ -20,22 +20,3 @@ struct RestaurantTimelineItemView: View {
         }
     }
 }
-
-
-#Preview {
-    RestaurantTimelineItemView(
-        item: try! TripItem(
-            id: 1,
-            tripId: 1,
-            name: "Dinner at Hofbräuhaus",
-            itemType: .restaurant,
-            startDateTime: Date(),
-            endDateTime: Date().addingTimeInterval(7200),
-            metadata: .restaurant(RestaurantMetadata()),
-            locations: [Location(sequence: 0, name: "Hofbräuhaus", address: "Platzl 9, 80331 Munich", latitude: 48.1376, longitude: 11.5799)]
-        ),
-        onEdit: {},
-        onDelete: {}
-    )
-    .padding()
-}
