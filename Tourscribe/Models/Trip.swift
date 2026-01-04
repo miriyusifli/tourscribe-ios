@@ -47,4 +47,31 @@ struct Trip: Identifiable, Codable, Hashable {
         guard let days = Calendar.current.dateComponents([.day], from: endDate, to: Date()).day else { return nil }
         return max(0, days)
     }
+    
+    var relativeTimeLabel: String? {
+        guard startDate != nil, endDate != nil else { return nil }
+        
+        if isOngoing {
+            return String(localized: "trip.status.ongoing")
+        }
+        
+        if isPast, let days = daysSinceEnd {
+            if days == 0 { return String(localized: "trip.status.ended_today") }
+            if days <= 30 { return String(localized: "trip.status.days_ago.\(days)") }
+            let months = days / 30
+            if months < 12 { return String(localized: "trip.status.months_ago.\(months)") }
+            let years = months / 12
+            return String(localized: "trip.status.years_ago.\(years)")
+        }
+        
+        if let days = daysUntilStart, days >= 0 {
+            if days <= 30 { return String(localized: "trip.status.in_days.\(days)") }
+            let months = days / 30
+            if months < 12 { return String(localized: "trip.status.in_months.\(months)") }
+            let years = months / 12
+            return String(localized: "trip.status.in_years.\(years)")
+        }
+        
+        return nil
+    }
 }

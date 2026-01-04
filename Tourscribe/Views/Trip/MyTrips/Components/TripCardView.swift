@@ -3,118 +3,90 @@ import SwiftUI
 struct TripCardView: View {
     let trip: Trip
     
-    private func tripLabelText() -> String {
-        if trip.isOngoing { return String(localized: "On Trip") }
-        if trip.isPast, let days = trip.daysSinceEnd {
-            if days == 0 { return String(localized: "Ended today") }
-            if days <= 30 { return String(localized: "\(days) \(days == 1 ? "day" : "days") ago") }
-            let months = days / 30
-            if months < 12 { return String(localized: "\(months) \(months == 1 ? "month" : "months") ago") }
-            let years = months / 12
-            return String(localized: "\(years) \(years == 1 ? "year" : "years") ago")
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            ZStack(alignment: .bottom) {
+                tripImage
+                tripFooter
+            }
+            
+            if let label = trip.relativeTimeLabel {
+                tripLabel(label)
+            }
         }
-        if let days = trip.daysUntilStart {
-            if days <= 30 { return String(localized: "In \(days) \(days == 1 ? "day" : "days")") }
-            let months = days / 30
-            if months < 12 { return String(localized: "In \(months) \(months == 1 ? "month" : "months")") }
-            let years = months / 12
-            return String(localized: "In \(years) \(years == 1 ? "year" : "years")")
-        }
-        return ""
+        .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.xlarge))
     }
     
     @ViewBuilder
-    private func tripLabel() -> some View {
-        HStack(spacing: 6) {
+    private var tripImage: some View {
+        if let url = URL(string: trip.imgUrl) {
+            CachedImage(url: url, size: CGSize(width: 400, height: 300))
+                .frame(maxWidth: .infinity)
+                .frame(height: 300)
+                .clipped()
+                .saturation(trip.isPast ? 0 : 1)
+        } else {
+            Color.gray.opacity(0.3)
+                .frame(maxWidth: .infinity)
+                .frame(height: 300)
+        }
+    }
+    
+    @ViewBuilder
+    private var tripFooter: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: StyleGuide.Spacing.medium) {
+                Text(trip.name)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+
+                if let start = trip.startDate, let end = trip.endDate {
+                    Rectangle()
+                        .fill(.white.opacity(0.2))
+                        .frame(height: 1)
+                    HStack {
+                        HStack(spacing: StyleGuide.Spacing.small) {
+                            Image(systemName: "calendar")
+                            Text("\(start.formatted(.dateTime.month().day())) - \(end.formatted(.dateTime.month().day()))")
+                        }
+                        Spacer()
+                        let nights = Calendar.current.dateComponents([.day], from: start, to: end).day ?? 0
+                        HStack(spacing: StyleGuide.Spacing.small) {
+                            Image(systemName: "moon.fill")
+                            Text(String(localized: "trip.nights.\(nights)"))
+                        }
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                }
+            }
+            Spacer()
+        }
+        .padding(.vertical, StyleGuide.Padding.medium)
+        .padding(.horizontal, StyleGuide.Padding.large)
+        .background(.ultraThinMaterial.opacity(1))
+        .environment(\.colorScheme, .dark)
+        .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.large))
+        .padding(StyleGuide.Padding.standard)
+    }
+    
+    private func tripLabel(_ text: String) -> some View {
+        HStack(spacing: StyleGuide.Spacing.small) {
             if trip.isOngoing {
                 Circle()
                     .fill(Color.green)
-                    .frame(width: 8, height: 8)
+                    .frame(width: StyleGuide.Spacing.medium, height: StyleGuide.Spacing.medium)
             }
-            Text(tripLabelText())
+            Text(text)
         }
         .font(.subheadline)
         .fontWeight(.medium)
         .foregroundColor(.white)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, StyleGuide.Padding.standard)
+        .padding(.vertical, StyleGuide.Padding.small)
         .background(.ultraThinMaterial.opacity(1))
         .environment(\.colorScheme, .dark)
         .clipShape(Capsule())
-        .padding(12)
+        .padding(StyleGuide.Padding.standard)
     }
-    
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-            ZStack(alignment: .bottom) {
-                // Background Image
-                if let url = URL(string: trip.imgUrl) {
-                    CachedImage(url: url, size: CGSize(width: 400, height: 300))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 300)
-                        .clipped()
-                        .saturation(trip.isPast ? 0 : 1)
-                } else {
-                    Color.gray.opacity(0.3)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 300)
-                }
-                
-                // Glass Footer
-                HStack {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(trip.name)
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-
-                        if let start = trip.startDate, let end = trip.endDate {
-                            Rectangle()
-                                .fill(.white.opacity(0.2))
-                                .frame(height: 1)
-                            HStack {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "calendar")
-                                    Text("\(start.formatted(.dateTime.month().day())) - \(end.formatted(.dateTime.month().day()))")
-                                }
-                                Spacer()
-                                let nights = Calendar.current.dateComponents([.day], from: start, to: end).day ?? 0
-                                HStack(spacing: 4) {
-                                    Image(systemName: "moon.fill")
-                                    Text("\(nights) nights")
-                                }
-                            }
-                            .font(.subheadline)
-                            .foregroundColor(.white)
-                        }
-                    }
-                    Spacer()
-                }
-                .padding(.vertical, 16)
-                .padding(.horizontal, 20)
-                .background(.ultraThinMaterial.opacity(1))
-                .environment(\.colorScheme, .dark)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .padding(12)
-            }
-            
-            if trip.startDate != nil && trip.endDate != nil {
-                tripLabel()
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-    }
-}
-
-#Preview {
-    TripCardView(trip: Trip(
-        id: 1,
-        userId: UUID(),
-        name: "Amalfi Coast Escape",
-        imgUrl: "https://images.unsplash.com/photo-1605632491882-f129aa074767?ixid=M3w4NDk0MzZ8MHwxfHNlYXJjaHwxfHxTcGFpbiUyMHRyYXZlbCUyQ2NpdHklMkNuYXR1cmUlMkNoaXN0b3J5JTJDcHJvZmVzc2lvbmFsJTJDbm8tcGVyc29uJTJDbm8tYW5pbWFsfGVufDB8MXx8fDE3NjY5NjM2Mzh8MA&ixlib=rb-4.1.0",
-        startDate: nil,
-        endDate: nil,
-        version: 1,
-        createdAt: Date(),
-        updatedAt: nil
-    ))
 }
