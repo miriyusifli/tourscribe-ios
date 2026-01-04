@@ -134,7 +134,7 @@ struct TripItineraryView: View {
                 showLLMChat = true
             }
             NavigationLink {
-                TripMapView(itemsByDate: viewModel.itemsByDate, tripName: trip.name)
+                TripMapView(tripId: trip.id, tripName: trip.name)
             } label: {
                 HeaderButtonLabel(icon: "map.fill", title: String(localized:"button.map_view"), iconColor: .green)
             }

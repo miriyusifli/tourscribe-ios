@@ -2,20 +2,28 @@ import SwiftUI
 import MapKit
 
 struct TripMapView: View {
-    let itemsByDate: [(date: Date, items: [TimelineDisplayItem])]
+    let tripId: Int64
     let tripName: String
+    
+    @State private var viewModel: TripItemViewModel
     @State private var selectedDisplayItemId: String?
-    @State private var selectedDate: Date
+    @State private var selectedDate: Date = Date()
     @State private var mapPosition: MapCameraPosition = .automatic
     
     private let calendar = Calendar.current
     
+    init(tripId: Int64, tripName: String) {
+        self.tripId = tripId
+        self.tripName = tripName
+        self._viewModel = State(initialValue: TripItemViewModel(tripId: tripId))
+    }
+    
     private var availableDates: [Date] {
-        itemsByDate.map { $0.date }
+        viewModel.itemsByDate.map { $0.date }
     }
     
     private var filteredDisplayItems: [TimelineDisplayItem] {
-        itemsByDate.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }?.items ?? []
+        viewModel.itemsByDate.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }?.items ?? []
     }
     
     private var annotations: [TripMapAnnotation] {
@@ -35,14 +43,6 @@ struct TripMapView: View {
         filteredDisplayItems.first { $0.id == selectedDisplayItemId }
     }
     
-    init(itemsByDate: [(date: Date, items: [TimelineDisplayItem])], tripName: String) {
-        self.itemsByDate = itemsByDate
-        self.tripName = tripName
-        let today = Calendar.current.startOfDay(for: Date())
-        let dates = itemsByDate.map { $0.date }
-        self._selectedDate = State(initialValue: dates.contains(today) ? today : dates.first ?? today)
-    }
-    
     var body: some View {
         ZStack(alignment: .bottom) {
             mapView
@@ -52,8 +52,10 @@ struct TripMapView: View {
         .navigationTitle(tripName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .onAppear {
+        .task {
             CLLocationManager().requestWhenInUseAuthorization()
+            await viewModel.fetchAllItems()
+            initializeSelectedDate()
             zoomToFitAnnotations()
         }
         .safeAreaInset(edge: .top) {
@@ -63,6 +65,11 @@ struct TripMapView: View {
             selectedDisplayItemId = nil
             zoomToFitAnnotations()
         }
+    }
+    
+    private func initializeSelectedDate() {
+        let today = calendar.startOfDay(for: Date())
+        selectedDate = availableDates.first { calendar.isDate($0, inSameDayAs: today) } ?? availableDates.first ?? today
     }
     
     @ViewBuilder
@@ -120,16 +127,19 @@ struct TripMapView: View {
         }
     }
     
+    @ViewBuilder
     private var dayPicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: StyleGuide.Spacing.medium) {
-                ForEach(availableDates, id: \.self) { date in
-                    dayButton(for: date)
+        if !availableDates.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: StyleGuide.Spacing.medium) {
+                    ForEach(availableDates, id: \.self) { date in
+                        dayButton(for: date)
+                    }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
+            .background(.ultraThinMaterial)
         }
-        .background(.ultraThinMaterial)
     }
     
     private func dayButton(for date: Date) -> some View {
@@ -169,98 +179,7 @@ struct TripMapAnnotation: Identifiable, Hashable {
 }
 
 #Preview {
-    let previewItems: [TripItem] = {
-        let json = """
-        [
-            {
-                "id": 1,
-                "trip_id": 30,
-                "name": "Flight to Munich",
-                "item_type": "flight",
-                "start_datetime": "2025-12-24T08:00:00Z",
-                "end_datetime": "2025-12-24T10:30:00Z",
-                "metadata": {"airline": "Lufthansa", "flight_number": "LH123"},
-                "created_at": "2025-12-24T16:44:36Z",
-                "updated_at": null,
-                "trip_item_locations": [
-                    {"id": 1, "trip_item_id": 1, "sequence": 0, "name": "JFK International", "address": "New York, USA", "latitude": 40.6413, "longitude": -73.7781},
-                    {"id": 2, "trip_item_id": 1, "sequence": 1, "name": "Munich Airport", "address": "Munich, Germany", "latitude": 48.3537, "longitude": 11.7750}
-                ]
-            },
-            {
-                "id": 2,
-                "trip_id": 30,
-                "name": "Hotel Bayerischer Hof",
-                "item_type": "accommodation",
-                "start_datetime": "2025-12-24T14:00:00Z",
-                "end_datetime": "2025-12-28T11:00:00Z",
-                "metadata": {},
-                "created_at": "2025-12-24T16:44:36Z",
-                "updated_at": null,
-                "trip_item_locations": [
-                    {"id": 3, "trip_item_id": 2, "sequence": 0, "name": "Hotel Bayerischer Hof", "address": "Promenadeplatz 2-6, 80333 Munich", "latitude": 48.1397, "longitude": 11.5735}
-                ]
-            },
-            {
-                "id": 3,
-                "trip_id": 30,
-                "name": "Visit Marienplatz",
-                "item_type": "activity",
-                "start_datetime": "2025-12-24T16:00:00Z",
-                "end_datetime": "2025-12-24T18:00:00Z",
-                "metadata": {},
-                "created_at": "2025-12-24T16:44:36Z",
-                "updated_at": null,
-                "trip_item_locations": [
-                    {"id": 4, "trip_item_id": 3, "sequence": 0, "name": "Marienplatz", "address": "Marienplatz, 80331 Munich", "latitude": 48.1374, "longitude": 11.5755}
-                ]
-            },
-            {
-                "id": 4,
-                "trip_id": 30,
-                "name": "Dinner at Hofbräuhaus",
-                "item_type": "restaurant",
-                "start_datetime": "2025-12-24T19:00:00Z",
-                "end_datetime": "2025-12-24T21:00:00Z",
-                "metadata": {},
-                "created_at": "2025-12-24T16:44:36Z",
-                "updated_at": null,
-                "trip_item_locations": [
-                    {"id": 5, "trip_item_id": 4, "sequence": 0, "name": "Hofbräuhaus", "address": "Platzl 9, 80331 Munich", "latitude": 48.1376, "longitude": 11.5799}
-                ]
-            },
-            {
-                "id": 5,
-                "trip_id": 30,
-                "name": "Train to Neuschwanstein",
-                "item_type": "transport",
-                "start_datetime": "2025-12-25T09:00:00Z",
-                "end_datetime": "2025-12-25T11:00:00Z",
-                "metadata": {"carrier": "Deutsche Bahn", "vehicle_number": "RE 57432"},
-                "created_at": "2025-12-24T16:44:36Z",
-                "updated_at": null,
-                "trip_item_locations": [
-                    {"id": 6, "trip_item_id": 5, "sequence": 0, "name": "Munich Hauptbahnhof", "address": "Munich Central Station", "latitude": 48.1403, "longitude": 11.5600},
-                    {"id": 7, "trip_item_id": 5, "sequence": 1, "name": "Füssen Station", "address": "Füssen, Germany", "latitude": 47.5692, "longitude": 10.7008}
-                ]
-            }
-        ]
-        """
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try! decoder.decode([TripItem].self, from: json.data(using: .utf8)!)
-    }()
-    
-    let itemsByDate: [(date: Date, items: [TimelineDisplayItem])] = {
-        let grouped = previewItems.reduce(into: [Date: [TimelineDisplayItem]]()) { result, item in
-            for displayItem in TimelineDisplayItem.from(item) {
-                result[displayItem.displayDate, default: []].append(displayItem)
-            }
-        }
-        return grouped.sorted { $0.key < $1.key }.map { ($0.key, $0.value.sorted { $0.sortTime < $1.sortTime }) }
-    }()
-    
     NavigationStack {
-        TripMapView(itemsByDate: itemsByDate, tripName: "Germany Trip")
+        TripMapView(tripId: 30, tripName: "Germany Trip")
     }
 }

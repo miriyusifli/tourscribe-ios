@@ -7,24 +7,31 @@ class TripItemViewModel {
     private let tripItemService: TripItemServiceProtocol
     private let tripService: TripServiceProtocol
     private let tripStore: TripStore
+    private let store: TripItemStore
     private let calendar = Calendar.current
     
-    var tripItems: [TripItem] = []
     var isLoading = false
     var isLoadingMore = false
-    var hasMore = true
     var alert: AlertType? = nil
     
-    private var cursor: TripItemCursor? {
-        guard let last = tripItems.last else { return nil }
-        return TripItemCursor(startDateTime: last.startDateTime, id: last.id)
-    }
+    var tripItems: [TripItem] { store.items }
     
-    init(tripId: Int64, tripItemService: TripItemServiceProtocol = TripItemService(), tripService: TripServiceProtocol = TripService(), tripStore: TripStore = .shared) {
+    init(
+        tripId: Int64,
+        tripItemService: TripItemServiceProtocol = TripItemService(),
+        tripService: TripServiceProtocol = TripService(),
+        tripStore: TripStore = .shared,
+        store: TripItemStore = .shared
+    ) {
         self.tripId = tripId
         self.tripItemService = tripItemService
         self.tripService = tripService
         self.tripStore = tripStore
+        self.store = store
+        
+        if store.tripId != tripId {
+            store.clear()
+        }
     }
     
     init(tripId: Int64, previewItems: [TripItem]) {
@@ -32,11 +39,10 @@ class TripItemViewModel {
         self.tripItemService = TripItemService()
         self.tripService = TripService()
         self.tripStore = .shared
-        self.tripItems = previewItems
-        self.isLoading = false
+        self.store = .shared
+        store.setItems(previewItems, for: tripId, hasMore: false)
     }
     
-    /// Groups trip items by date. Accommodations appear as separate check-in/check-out cards.
     var itemsByDate: [(date: Date, items: [TimelineDisplayItem])] {
         let grouped = tripItems.reduce(into: [Date: [TimelineDisplayItem]]()) { result, item in
             for displayItem in TimelineDisplayItem.from(item) {
@@ -49,17 +55,13 @@ class TripItemViewModel {
             .map { ($0.key, $0.value.sorted { $0.sortTime < $1.sortTime }) }
     }
     
-    /// Returns the active accommodation for a given date (check-in day through last night, not check-out day)
     func activeAccommodation(for date: Date) -> TripItem? {
         let dayStart = calendar.startOfDay(for: date)
         
         return tripItems.first { item in
             guard item.itemType == .accommodation else { return false }
-            
             let checkInDay = calendar.startOfDay(for: item.startDateTime)
             let checkOutDay = calendar.startOfDay(for: item.endDateTime)
-            
-            // Show on check-in day and days staying, but not on check-out day
             return dayStart >= checkInDay && dayStart < checkOutDay
         }
     }
@@ -71,8 +73,22 @@ class TripItemViewModel {
         
         do {
             let page = try await tripItemService.fetchTripItems(for: tripId, cursor: nil, limit: AppConfig.tripItemsPageSize)
-            tripItems = page.items
-            hasMore = page.hasMore
+            store.setItems(page.items, for: tripId, hasMore: page.hasMore)
+        } catch {
+            alert = .error(String(localized: "error.generic.unknown"))
+        }
+        
+        isLoading = false
+    }
+    
+    func fetchAllItems() async {
+        guard !store.isFullyLoaded else { return }
+        
+        isLoading = true
+        
+        do {
+            let items = try await tripItemService.fetchAllTripItems(for: tripId)
+            store.setItems(items, for: tripId, hasMore: false)
         } catch {
             alert = .error(String(localized: "error.generic.unknown"))
         }
@@ -81,14 +97,13 @@ class TripItemViewModel {
     }
     
     func loadMore() async {
-        guard hasMore, !isLoadingMore, !isLoading else { return }
+        guard store.hasMore, !store.isFullyLoaded, !isLoadingMore, !isLoading else { return }
         
         isLoadingMore = true
         
         do {
-            let page = try await tripItemService.fetchTripItems(for: tripId, cursor: cursor, limit: AppConfig.tripItemsPageSize)
-            tripItems.append(contentsOf: page.items)
-            hasMore = page.hasMore
+            let page = try await tripItemService.fetchTripItems(for: tripId, cursor: store.cursor, limit: AppConfig.tripItemsPageSize)
+            store.appendItems(page.items, hasMore: page.hasMore)
         } catch {
             // Silent fail for load more
         }
@@ -97,14 +112,13 @@ class TripItemViewModel {
     }
     
     func deleteTripItem(itemId: Int64) async {
-        guard let index = tripItems.firstIndex(where: { $0.id == itemId }) else { return }
-        let deletedItem = tripItems.remove(at: index)
+        guard let deletedItem = store.removeItem(itemId) else { return }
         
         do {
             try await tripItemService.deleteTripItem(itemId: itemId)
             await refreshTrip()
         } catch {
-            tripItems.insert(deletedItem, at: min(index, tripItems.count))
+            store.insert(deletedItem)
             alert = .error(String(localized: "error.trip_item.delete_failed"))
         }
     }

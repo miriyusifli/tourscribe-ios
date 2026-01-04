@@ -30,6 +30,18 @@ class TripItemService: TripItemServiceProtocol {
         return TripItemPage(items: items, hasMore: hasMore)
     }
 
+    func fetchAllTripItems(for tripId: Int64) async throws -> [TripItem] {
+        let response = try await client
+            .from("trip_items")
+            .select("id, trip_id, name, item_type, start_datetime, end_datetime, metadata, version, created_at, updated_at, trip_item_locations(*)")
+            .eq("trip_id", value: String(tripId))
+            .order("start_datetime", ascending: true)
+            .order("id", ascending: true)
+            .execute()
+        
+        return try JSONDecoders.iso8601.decode([TripItem].self, from: response.data)
+    }
+
     func createTripItem(request: TripItemCreateRequest) async throws -> TripItem {
         let params = request.toRPCParams()
         let response = try await client.rpc("create_trip_item", params: params).execute()
