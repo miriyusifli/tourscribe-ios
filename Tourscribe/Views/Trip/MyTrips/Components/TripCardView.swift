@@ -67,11 +67,10 @@ struct TripCardView: View {
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
 
-                        Rectangle()
-                            .fill(.white.opacity(0.2))
-                            .frame(height: 1)
-                        
                         if let start = trip.startDate, let end = trip.endDate {
+                            Rectangle()
+                                .fill(.white.opacity(0.2))
+                                .frame(height: 1)
                             HStack {
                                 HStack(spacing: 4) {
                                     Image(systemName: "calendar")
@@ -98,7 +97,9 @@ struct TripCardView: View {
                 .padding(12)
             }
             
-            tripLabel()
+            if trip.startDate != nil && trip.endDate != nil {
+                tripLabel()
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
@@ -110,8 +111,8 @@ struct TripCardView: View {
         userId: UUID(),
         name: "Amalfi Coast Escape",
         imgUrl: "https://images.unsplash.com/photo-1605632491882-f129aa074767?ixid=M3w4NDk0MzZ8MHwxfHNlYXJjaHwxfHxTcGFpbiUyMHRyYXZlbCUyQ2NpdHklMkNuYXR1cmUlMkNoaXN0b3J5JTJDcHJvZmVzc2lvbmFsJTJDbm8tcGVyc29uJTJDbm8tYW5pbWFsfGVufDB8MXx8fDE3NjY5NjM2Mzh8MA&ixlib=rb-4.1.0",
-        startDate: Date(),
-        endDate: Date().addingTimeInterval(86400 * 70),
+        startDate: nil,
+        endDate: nil,
         version: 1,
         createdAt: Date(),
         updatedAt: nil
