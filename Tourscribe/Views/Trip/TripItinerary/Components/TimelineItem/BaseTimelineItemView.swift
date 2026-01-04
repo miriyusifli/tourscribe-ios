@@ -40,7 +40,7 @@ struct BaseTimelineItemView<Content: View>: View {
             VStack(alignment: .leading, spacing: StyleGuide.Spacing.small) {
                 HStack(spacing: StyleGuide.Spacing.small) {
                     Image(systemName: item.itemType.icon)
-                    Text(item.itemType.rawValue.capitalized)
+                    Text(item.itemType.localizedName)
                 }
                 .font(.caption2)
                 .foregroundStyle(item.itemType.color)

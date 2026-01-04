@@ -22,13 +22,13 @@ struct HeaderButtonLabel: View {
     var body: some View {
         HStack(spacing: StyleGuide.Spacing.standard) {
             Image(systemName: icon)
-                .font(.system(size: 18))
+                .font(.system(size: StyleGuide.IconSize.small + 2))
                 .foregroundColor(.white)
-                .frame(width: 36, height: 36)
+                .frame(width: StyleGuide.IconSize.medium + 4, height: StyleGuide.IconSize.medium + 4)
                 .background(iconColor)
                 .clipShape(RoundedRectangle(cornerRadius: StyleGuide.CornerRadius.small, style: .continuous))
             Text(title)
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .font(.system(size: StyleGuide.IconSize.small, weight: .semibold, design: .rounded))
             Spacer()
         }
         .foregroundColor(.textPrimary)
