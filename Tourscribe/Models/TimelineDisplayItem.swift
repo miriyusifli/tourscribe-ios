@@ -36,10 +36,6 @@ struct TimelineDisplayItem: Identifiable {
         let startDay = calendar.startOfDay(for: item.startDateTime)
         let endDay = calendar.startOfDay(for: item.endDateTime)
         
-        if startDay == endDay {
-            return [TimelineDisplayItem(item: item, displayMode: .standard)]
-        }
-        
         return [
             TimelineDisplayItem(item: item, displayMode: .checkIn),
             TimelineDisplayItem(item: item, displayMode: .checkOut)
