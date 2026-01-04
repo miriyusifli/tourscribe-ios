@@ -1,4 +1,5 @@
 import SwiftUI
+import Supabase
 
 @main
 struct TourscribeApp: App {
@@ -31,6 +32,11 @@ struct TourscribeApp: App {
                 }
             }
             .preferredColorScheme(.light)
+            .onOpenURL { url in
+                Task {
+                    try? await SupabaseClientManager.shared.client.auth.session(from: url)
+                }
+            }
         }
     }
 }

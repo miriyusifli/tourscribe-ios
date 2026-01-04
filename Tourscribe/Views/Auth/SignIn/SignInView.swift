@@ -6,17 +6,10 @@ struct SignInView: View {
     var body: some View {
         AppView {
             VStack(spacing: StyleGuide.Spacing.xlarge) {
-                header
-                form
-                signInButton
-                
                 Spacer()
-                
-                VStack {
-                    divider
-                    socialButtons
-                    signUpLink
-                }
+                header
+                Spacer()
+                socialButtons
             }
             .padding(StyleGuide.Padding.large)
         }
@@ -36,40 +29,7 @@ struct SignInView: View {
         Text(String(localized: "signin.welcome"))
             .font(.system(size: 34, weight: .bold, design: .rounded))
             .foregroundColor(.textPrimary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private var form: some View {
-        VStack(spacing: StyleGuide.Spacing.xlarge) {
-            CustomTextField(icon: "envelope.fill", placeholder: String(localized: "label.email"), text: $viewModel.email)
-                .textInputAutocapitalization(.never)
-                .keyboardType(.emailAddress)
-            
-            CustomSecureField(icon: "lock.fill", placeholder: String(localized: "label.password"), text: $viewModel.password)
-        }
-    }
-
-    @ViewBuilder
-    private var signInButton: some View {
-        Button(action: viewModel.signIn) {
-            Text(String(localized: "signin.button"))
-                .font(.system(size: 18, weight: .bold))
-        }
-        .foregroundColor(.white)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, StyleGuide.Padding.medium)
-        .background(Color.primaryColor)
-        .clipShape(Capsule())
-    }
-
-    @ViewBuilder
-    private var divider: some View {
-        HStack(spacing: StyleGuide.Spacing.standard) {
-            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-        }
-        .padding(.vertical, StyleGuide.Padding.small)
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 
     @ViewBuilder
@@ -91,21 +51,6 @@ struct SignInView: View {
                 action: viewModel.signInWithGoogle
             )
         }
-    }
-
-    @ViewBuilder
-    private var signUpLink: some View {
-        HStack {
-            Text("Don't have an account?")
-                .foregroundColor(.textSecondary)
-            NavigationLink(destination: SignUpView()) {
-                Text("Sign Up")
-                    .fontWeight(.bold)
-                    .foregroundColor(.primaryColor)
-            }
-        }
-        .font(.system(size: 16))
-        .padding(.top, StyleGuide.Padding.small)
     }
 }
 
