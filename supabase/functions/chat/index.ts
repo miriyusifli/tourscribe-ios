@@ -1,8 +1,48 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient, SupabaseClient } from "jsr:@supabase/supabase-js@2";
-import { GoogleGenerativeAI } from "npm:@google/generative-ai";
+import { createClient } from "npm:@supabase/supabase-js";
+import { GoogleGenAI } from "npm:@google/genai";
+import { z } from "npm:zod";
+
+// =============================================================================
+// Constants
+// =============================================================================
 
 const MODEL_NAME = "gemini-2.5-flash";
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const saveItineraryDeclaration = {
+  name: "save_itinerary",
+  description: "Save the confirmed itinerary with structured data. Call this when user confirms the itinerary.",
+  parameters: {
+    type: "object",
+    properties: {
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Exact name of the place (e.g., 'Café de Flore')" },
+            textContent: { type: "string", description: "Full display text with name, address and description (e.g., 'Café de Flore, 172 Boulevard Saint-Germain, Paris - Historic café frequented by artists')" },
+            address: { type: "string", description: "Full street address with number and city (e.g., '172 Boulevard Saint-Germain, Paris')" },
+            item_type: { type: "string", enum: ["activity", "restaurant"], description: "Type of item: 'activity' for attractions/walks, 'restaurant' for meals" },
+            start_datetime: { type: "string", description: "Start time in ISO 8601 format (e.g., '2025-09-12T09:00:00')" },
+            end_datetime: { type: "string", description: "End time in ISO 8601 format (e.g., '2025-09-12T10:30:00')" },
+          },
+          required: ["name", "textContent", "address", "item_type", "start_datetime", "end_datetime"],
+        },
+      },
+    },
+    required: ["items"],
+  },
+};
+
+// =============================================================================
+// Types & Schemas
+// =============================================================================
 
 interface UserProfile {
   name: string;
@@ -11,276 +51,319 @@ interface UserProfile {
   birth_date: string;
 }
 
+interface PlaceResult {
+  placeId: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+interface ExtractedItem {
+  name: string;
+  textContent: string;
+  address: string;
+  item_type: "activity" | "restaurant";
+  start_datetime: string;
+  end_datetime: string;
+}
+
+interface EnrichedItem extends ExtractedItem {
+  place_id: string;
+  latitude: number;
+  longitude: number;
+}
+
+const requestSchema = z.object({
+  message: z.string().min(1),
+  history: z.array(z.object({ role: z.string(), content: z.string() })).optional(),
+  trip_id: z.number().int(),
+  name: z.string().min(1),
+  gender: z.string(),
+  birth_date: z.string(),
+  interests: z.array(z.string()),
+});
+
+// Service role client - only for rate limit check
+const adminClient = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+);
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+const jsonResponse = (data: object, status = 200) =>
+  new Response(JSON.stringify(data), {
+    status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+
 const calculateAge = (birthDate: string): number => {
   const birth = new Date(birthDate);
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
   return age;
 };
 
-const getSystemPrompt = (tripId: string, profile: UserProfile) => `
-### IDENTITY & TONE
-- Your name is **Tourscribe AI**. 
-- Created by a team of **"cool developers"** to be the ultimate traveler's companion.
-- **IMPORTANT:** Never mention Google, Gemini, LLM, or any specific AI model. Identify only as Tourscribe AI.
+// =============================================================================
+// System Prompt
+// =============================================================================
 
-### USER PROFILE
-- Age: ${calculateAge(profile.birth_date)} | Gender: ${profile.gender}
-- Interests: ${profile.interests.join(", ")}
-Tailor all specific recommendations to these interests.
+const buildSystemPrompt = (tripId: number, profile: UserProfile) => `
+## IDENTITY
+You are **Tourscribe AI**, a travel planning assistant. Never mention Google, Gemini, or any AI model.
 
-### SESSION CONTEXT
-- **Current Trip ID:** ${tripId}. 
-- **TRIP ID PRIVACY:** Never expose the raw Trip ID string. Refer to it as **"this trip"** or **"your itinerary."**
+## USER
+${profile.name} | Age ${calculateAge(profile.birth_date)} | ${profile.gender}
+Interests: ${profile.interests.join(", ")}
 
-## Planning rules
+## RULES
+**Data Collection** (ask only for missing fields, acknowledge what's received):
+1. Destination (specific city)
+2. Exact dates (e.g., "Sep 12-18, 2025") - reject vague ranges
+3. Arrival & departure times (24h format)
+4. Budget: Budget / Mid-range / Luxury
 
-### 1. Date Precision Mandate (Node 3 Gatekeeping)
-- **ACKNOWLEDGMENT:** If a user provides partial information (e.g., gives the destination but forgets the dates, or gives the arrival time but not departure), you MUST acknowledge the part you received.
-- **SURGICAL QUESTIONS:** Never re-ask for information you already have. Modify your templates to ask ONLY for the missing fields.
-- **STRICT REQUIREMENT:** You MUST obtain an **exact start date and end date** (e.g., "September 12th to September 18th, 2025").
-- **REJECT VAGUE INPUT:** Do NOT accept general ranges such as "in September," "next summer," "sometime in 2025," or "for two weeks." 
-- **PROTOCOL:** If the user provides a vague timeframe, you must stay in **Node 3b** and politely insist on specific dates, explaining that exact dates are required for seasonal accuracy and establishment availability.
-- **STRICT TIMES (Node 4):** You MUST obtain the **arrival time for Day 1** and the **departure time for the Last Day** (24-hour format).
-- **TIME-BOUND PLANNING:** - **First Day:** Itinerary must start at least **90 minutes after** arrival time (to allow for deplaning/transit). Do not suggest meals or activities that occur before this window.
-    - **Last Day:** Itinerary must end at least **3 hours before** departure time. Do not suggest activities that overlap with the departure window.
+**Date Interpretation:**
+- Always interpret dates as future dates. If user says "April" without a year, assume the next upcoming April.
+- Never create itineraries for past dates. If dates appear to be in the past, ask user to confirm future dates.
+- Today's date is used as reference for determining future dates.
 
-### 2. The Specificity & Seasonal Mandate
-- **STRICTLY FORBIDDEN:** Vague suggestions like "Luxury Shopping" or "Dinner at Local Bistro."
-- **REQUIRED:** Suggest **real-world, specific establishments** (e.g., "The Ritz-Carlton Spa").
-- **SEASONAL INTELLIGENCE:** You MUST align all activities with the destination's climate during the travel dates provided in Node 3. 
-    - **Winter:** Prioritize indoor venues, cozy atmospheres, museums, winter markets, and seasonal comfort food. Avoid outdoor-only attractions (like unheated terraces or summer-only parks).
-    - **Summer:** Prioritize outdoor terraces, parks, beaches, walking tours, and light, seasonal dining. 
-    - **Hemisphere Awareness:** Remember that seasons are reversed in the Northern vs. Southern Hemispheres.
-- **DAILY MEAL REQUIREMENT:** Unless the user explicitly requests otherwise, every planned day **MUST** include three specific restaurant recommendations: **Breakfast, Lunch, and Dinner**.
-- **BUDGET ALIGNMENT:** Establishments must match the user's tier (Budget, Mid-range, or Luxury).
+**Time Constraints:**
+- Day 1 starts 90+ min after arrival
+- Last day ends 3+ hours before departure
 
-### 2. Spatial & Temporal Logic (Proximity & Transit)
-- **GEOGRAPHIC CLUSTERING:** You MUST group activities by neighborhood/district. Do not make the user cross the city multiple times a day.
-- **TRANSIT BUFFERS:** Do NOT schedule activities back-to-back without travel time. 
-- **REALISTIC FLOW:** Factor in the time it takes to walk, find a taxi, or use transit. If a location is far, increase the gap
-- **FORMATTING:** Use • (bullet character) for items. Each item must be on its own new line. Use 24-hour format.
+**Itinerary Quality:**
+- Every suggestion = real establishment name (never "Local Bistro" or "Luxury Shopping")
+- Only include places with 4+ star ratings
+- Every day includes breakfast, lunch, dinner unless user opts out
+- Match activities to season (winter→indoor, summer→outdoor; respect hemispheres)
+- Group by neighborhood, include transit time between activities
 
-### 3. Database & Tool Integrity
-- **STRICT CATEGORIZATION:** Use ONLY ["activity", "restaurant"]. 
-- **NO MERGING:** Every activity and meal must be its own distinct database item (Node 9).
+**Privacy:** Refer to trip as "this trip" or "your itinerary" - never expose the trip ID (${tripId})
 
-### CONVERSATION GRAPH (MERMAID)
-\`\`\`mermaid
-graph TD
-    Node1([1. User Input]) --> Node2[2. Greet User]
-    Node2 --> Node3{3. Destination & Exact Dates Known?}
-    Node3 -- No/Partial --> Node3b[3b. Acknowledge Received & Ask Missing Info]
-    Node3b --> Node3
-    Node3 -- Yes --> Node4{4. Arrival & Departure Times Known?}
-    Node4 -- No/Partial --> Node4b[4b. Acknowledge Received & Ask Missing Times]
-    Node4b --> Node4
-    Node4 -- Yes --> Node5[5. Decide Season based on Destination/Dates]
-    Node5 --> Node6{6. Budget Tier Known?}
-    Node6 -- No --> Node6b[6b. Ask for Budget Tier]
-    Node6b --> Node6
-    Node6 -- Yes --> Node7[7. Plan Time-Restricted Seasonal Itinerary]
-    Node7 --> Node8{8. Confirmation Loop}
-    Node8 -- Request Changes --> Node8b[8b. Modify Plan]
-    Node8b --> Node7
-    Node8 -- User Approves --> Node9[9. Create Trip Items via Tools]
-    Node9 --> Node10[10. Mandatory Booking Disclaimer & Success]
-    Node9 -- Failed --> Error[General Error Message]
-\`\`\`
+## FORMAT
+- 24h time (14:00 not 2pm)
+- Bullets: •
+- Emojis: ☕ breakfast, 🍴 lunch, 🍷 dinner, 🏛️ culture, 🛍️ shopping, 🎨 art, 🚶 walking
 
-### REQUIRED MESSAGE TEMPLATES
-You are FORBIDDEN from using your own words. You must fill these templates, adapting them if input was partial:
+## FLOW
+Greet → Get destination/dates → Get times → Get budget → Propose itinerary → User confirms
 
-- **[Node 2 - Greeting]:** "Hi ${profile.name}! I'm Tourscribe AI. I see you love ${profile.interests.join(", ")}—that’s awesome! To get started on your next adventure, could you tell me where you're thinking of heading and when?"
+## TEMPLATES
+**Greeting:** "Hi ${profile.name}! I see you love ${profile.interests.join(", ")}. Where are you heading and when?"
 
-- **[Node 3b - Missing Info]:** "I've noted [Received Info]! To plan with precision, I still need your [Missing Info (Destination / Start Date / End Date)]. What are those?"
+**Itinerary format:**
+**[Date]**
+• ☕ **[HH:MM-HH:MM] Breakfast:** [Place Name] - [Why]
+• 🏛️ **[HH:MM-HH:MM] Activity:** [Place Name] - [Description]
+• 🍴 **[HH:MM-HH:MM] Lunch:** [Place Name] - [Why]
+• 🍷 **[HH:MM-HH:MM] Dinner:** [Place Name] - [Why]
 
-- **[Node 4b - Times]:** "Got it! I've marked your [Received Time]. To finalize the schedule, I just need your [Missing Time (Arrival/Departure)] in [destination]. What time will that be?"
+CRITICAL: Use the Google Maps tool to look up and verify the exact address for every place. Every place MUST have a real, complete street address with street name and number (e.g., "123 Main Street, Paris"). Never use vague locations like "City Center" or "Near the park". Never add generic activities like "Luxury souvenir shopping", "Explore favorite landmarks", "Stroll around", or "Explore the area" - every item must be a specific, named location. For walking activities (e.g., "Walk along the river"), always specify the starting point with a street address. If a place doesn't have a street address, do not include it.
 
-- **[Node 6b - Budget]:** "Perfect! Since you'll be visiting during the [Season], I want to make sure the budget fits the seasonal activities. How would you describe your budget for this trip? (Budget, Mid-range, or Luxury?)"
-
-- **[Node 7/8 - Proposal]:** "I’ve curated a [budget_tier] itinerary for [destination]! This plan respects your [arrival_time] arrival and [departure_time] departure. Here is your detailed itinerary: 
-
-[Date Label]**
-• ☕ **[Start] - [End] | Breakfast:** [Establishment] - [Reason]
-• [Activity Icon] **[Start] - [End] | Activity:** [Establishment] - [Description] (Note: Chosen for [Season] conditions)
-[...Repeat Activity Pattern for as many items as logically fit before lunch...]
-• 🍴 **[Start] - [End] | Lunch:** [Establishment] - [Reason]
-• [Activity Icon] **[Start] - [End] | Activity:** [Establishment] - [Description]
-[...Repeat Activity Pattern for as many items as logically fit before dinner...]
-• 🍷 **[Start] - [End] | Dinner:** [Establishment] - [Reason]
-
-**Please note: I am not responsible for Hotel, Flight, or any bookings. This is just a plan; please book these yourself and double-check all details.** Does this look good?"
-
-- **[Node 10 - Success]:** "Perfect! I've successfully added those items to your itinerary. **Reminder: I am not responsible for your actual bookings. You must book the flights, hotels, and activities yourself. Please double-check the times and locations!** What's next?"
-
-- **[General Error]:** "Something went wrong. Please try again or rephrase your request."
-
-### RESPONSE STYLE
-- Be concise, professional, and warm.
-- Ensure 24-hour time formats.
-- Every meal and activity must be a specific establishment.
-- Use emojis for item types (☕, 🍴, 🍷, 🏛️, 🛍️, 🎨, 🚶, ✨).
-- No LaTeX.
+## COMPLETION
+When user confirms the itinerary (says yes, looks good, confirm, etc.), you MUST call the save_itinerary function with all itinerary items, then respond with the complete itinerary text.
 `;
 
+// =============================================================================
+// Google Places API
+// =============================================================================
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+async function searchPlaces(query: string): Promise<PlaceResult[] | null> {
+  
+  const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": Deno.env.get("GEMINI_API_KEY")!,
+      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location",
+    },
+    body: JSON.stringify({ textQuery: query, maxResultCount: 5 }),
+  });
 
-async function executeTool(client: SupabaseClient, tool: string, args: Record<string, unknown>, trip_id: string) {
-  let result;
-  switch (tool) {
-    case "create_trip_item":
-      result = await client.rpc("create_trip_item", {
-        p_trip_id: trip_id,
-        p_name: args.name,
-        p_item_type: args.item_type,
-        p_start_datetime: args.start_datetime,
-        p_end_datetime: args.end_datetime,
-        p_metadata: args.metadata || {},
-        p_locations: args.locations || [],
-      });
-      break;
-    case "get_trip_items":
-      result = await client.from("trip_items").select("*").eq("trip_id", trip_id);
-      break;
-    default:
-      result = { error: `Unknown tool: ${tool}` };
-  }
-  return result;
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  if (!data.places?.length) return null;
+
+  return data.places.map((p: any) => ({
+    placeId: p.id,
+    name: p.displayName?.text,
+    address: p.formattedAddress,
+    latitude: p.location?.latitude,
+    longitude: p.location?.longitude,
+  }));
 }
 
-const tools = [
-  {
-    name: "create_trip_item",
-    description: `Add an item/activity to a trip. Metadata is always an empty object {}.
+// =============================================================================
+// Chat Handler
+// =============================================================================
 
-Locations array structure: [{"sequence": 0, "name": "string", "address": "string|null", "latitude": number, "longitude": number}]
-- Requires at least 1 location with sequence 0`,
-    parameters: {
-      type: "object",
-      properties: {
-        name: { type: "string", description: "Item name" },
-        item_type: { type: "string", enum: ["activity", "restaurant"], description: "Item type" },
-        start_datetime: { type: "string", description: "Start datetime (ISO 8601 timestamp)" },
-        end_datetime: { type: "string", description: "End datetime (ISO 8601 timestamp)" },
-        metadata: { type: "object", description: "Always empty object {}" },
-        locations: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              sequence: { type: "integer", description: "Order index (always 0)" },
-              name: { type: "string", description: "Location name" },
-              address: { type: "string", description: "Full address" },
-              latitude: { type: "number", description: "Latitude coordinate" },
-              longitude: { type: "number", description: "Longitude coordinate" },
-            },
-            required: ["sequence", "name", "address", "latitude", "longitude"],
-          },
-          description: "Array with 1 location (sequence 0)",
-        },
-      },
-      required: ["name", "item_type", "start_datetime", "end_datetime", "metadata", "locations"],
+async function handleChat(ai: GoogleGenAI, message: string, history: any[], tripId: number, profile: UserProfile): Promise<{ text: string; items: ExtractedItem[] | null }> {
+  const start = performance.now();
+  
+  const chatHistory = history?.map((h) => ({
+    role: h.role === "user" ? "user" : "model",
+    parts: [{ text: h.content }],
+  })) || [];
+
+  const chat = ai.chats.create({
+    model: MODEL_NAME,
+    history: chatHistory,
+    config: {
+      systemInstruction: buildSystemPrompt(tripId, profile),
+      tools: [{ googleMaps: {} }, { functionDeclarations: [saveItineraryDeclaration] }],
     },
-  },
-  {
-    name: "get_trip_items",
-    description: "Get all items for a specific trip",
-    parameters: {
-      type: "object",
-      properties: { trip_id: { type: "string", description: "Trip ID" } },
-      required: ["trip_id"],
-    },
-  },
-];
+  });
+
+  const response = await chat.sendMessage({ message });
+  console.info(`[handleChat] ${(performance.now() - start).toFixed(0)}ms`);
+
+  // Check for function call
+  const functionCall = response.functionCalls?.[0];
+  if (functionCall?.name === "save_itinerary") {
+    const items = (functionCall.args as { items: ExtractedItem[] }).items;
+    return { text: response.text || "", items };
+  }
+
+  return { text: response.text || "", items: null };
+}
+
+// =============================================================================
+// Itinerary Enrichment
+// =============================================================================
+
+async function enrichItineraryItems(items: ExtractedItem[]): Promise<EnrichedItem[]> {
+  const start = performance.now();
+  
+  const results = await Promise.all(
+    items.map(async (item) => {
+      const query = `${item.name} ${item.address}`.trim();
+      const places = await searchPlaces(query);
+      
+      if (!places?.[0]?.address) {
+        console.error(`[enrichPlaces] No address found for: ${query}, skipping`);
+        return null;
+      }
+      
+      if (places.length > 1) console.warn(`[enrichPlaces] More than 1 place found for: ${query}, count: ${places.length}`);
+      
+      const place = places[0];
+      return {
+        ...item,
+        address: place.address,
+        place_id: place.placeId,
+        latitude: place.latitude,
+        longitude: place.longitude,
+      };
+    })
+  );
+  
+  const validResults = results.filter((item): item is EnrichedItem => item !== null);
+  console.info(`[enrichPlaces] ${validResults.length}/${items.length} valid, ${(performance.now() - start).toFixed(0)}ms`);
+
+  return validResults;
+}
+
+// =============================================================================
+// Save to Database
+// =============================================================================
+
+async function saveItineraryToDatabase(userClient: ReturnType<typeof createClient>, tripId: number, items: EnrichedItem[]) {
+  const start = performance.now();
+  
+  const batchItems = items.map((item) => ({
+    title: item.textContent,
+    item_type: item.item_type,
+    start_datetime: item.start_datetime,
+    end_datetime: item.end_datetime,
+    metadata: { place_id: item.place_id },
+    locations: [{
+      sequence: 1,
+      name: item.name,
+      address: item.address,
+      place_id: item.place_id,
+      latitude: item.latitude,
+      longitude: item.longitude,
+    }],
+  }));
+
+  const { data, error } = await userClient.rpc("create_trip_items_batch", {
+    p_trip_id: tripId,
+    p_items: batchItems,
+  });
+
+  if (error) {
+    console.error(`[saveItinerary] Batch insert failed:`, error.message);
+    throw new Error("Failed to save itinerary");
+  }
+
+  const count = (data as { count: number })?.count ?? 0;
+  console.info(`[saveItinerary] ${count} items saved, ${(performance.now() - start).toFixed(0)}ms`);
+  
+  return count;
+}
+
+// =============================================================================
+// Main Handler
+// =============================================================================
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: CORS_HEADERS });
+  }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return new Response(JSON.stringify({ error: "No auth" }), { status: 401, headers: corsHeaders });
-
+    if (!authHeader) return jsonResponse({ error: "No auth" }, 401);
+    
     const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } }
     });
-
     const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
-
-    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-
+    if (userError || !user) return jsonResponse({ error: "Unauthorized" }, 401);
+    
     const { data: remaining, error: limitError } = await adminClient.rpc("check_llm_chat_limit", { p_user_id: user.id });
-    if (limitError || remaining === -1) return new Response(JSON.stringify({ error: "Limit hit" }), { status: 429, headers: corsHeaders });
+    if (limitError || remaining === -1) return jsonResponse({ error: "Limit hit" }, 429);
 
-    const { message, history, trip_id, name, gender, birth_date, interests } = await req.json();
-    const profile: UserProfile = { name, gender, birth_date, interests };
-    
-    const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY")!);
-    
-    const model = genAI.getGenerativeModel({
-      model: MODEL_NAME,
-      tools: [{ functionDeclarations: tools }],
-    });
-
-    const chat = model.startChat({
-      history: history?.map((h: any) => ({
-        role: h.role === "user" ? "user" : "model",
-        parts: [{ text: h.content }],
-      })) || [],
-      systemInstruction: { role: "system", parts: [{ text: getSystemPrompt(trip_id, profile) }]},
-    });
-
-    // 1. Send the initial message
-    let result = await chat.sendMessage(message);
-    let response = result.response;
-
-    // 2. TOOL LOOP: Handle one or more function calls
-    while (response.candidates?.[0]?.content?.parts?.some(p => p.functionCall)) {
-      const parts = response.candidates[0].content.parts;
-      const toolResponses = [];
-
-      for (const part of parts) {
-        if (part.functionCall) {
-          const { name, args } = part.functionCall;
-          
-          // Use waitUntil for the tool execution to ensure DB consistency
-          // even if the model takes a long time to process the next step.
-          const toolPromise = executeTool(userClient, name, args, trip_id);
-          EdgeRuntime.waitUntil(toolPromise); 
-          
-          const toolData = await toolPromise;
-          
-          toolResponses.push({
-            functionResponse: { name, response: { content: toolData } }
-          });
-        }
-      }
-
-      result = await chat.sendMessage(toolResponses);
-      response = result.response;
+    const parsed = requestSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return jsonResponse({ error: "Invalid request" }, 400);
     }
 
+    const { message, history = [], trip_id, name, gender, birth_date, interests } = parsed.data;
+    const profile: UserProfile = { name, gender, birth_date, interests };
 
-    return new Response(JSON.stringify({
-      type: "text",
-      content: response.text(),
-      remaining_requests: remaining,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINI_API_KEY")! });
+    const { text, items } = await handleChat(ai, message, history, trip_id, profile);
+
+    // Continue chat if no function call (not confirmed)
+    if (!items) {
+      return jsonResponse({
+        content: text,
+        remaining_requests: 100,
+      });
+    }
+
+    // Enrich itinerary items with Places API
+    const structuredItems = await enrichItineraryItems(items);
+
+    // Save to database using user's client (respects RLS)
+    const savedCount = await saveItineraryToDatabase(userClient, trip_id, structuredItems);
+
+    return jsonResponse({
+      content: `Your itinerary has been saved! ${savedCount} items added to your trip.`, //TODO translation
+      remaining_requests: 100,
     });
-
   } catch (error) {
-    console.error("[Runtime Error]:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("[Error]:", error);
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return jsonResponse({ error: message }, 500);
   }
 });
+
